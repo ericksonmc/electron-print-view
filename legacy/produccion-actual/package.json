@@ -1,0 +1,25 @@
+{
+  "name": "cdapuestas-webview",
+  "version": "1.0.0",
+  "author": {
+    "name": "Javier",
+    "email": "javierdiazt406@icloud.com"
+  },
+  "description": "Webview para cdapuestas",
+  "main": "src/main.js",
+  "overrides": {
+    "usb": "1.8.0"
+  },
+  "dependencies": {
+    "@node-escpos/core": "^0.6.0",
+    "@node-escpos/usb-adapter": "^0.3.1",
+    "dotenv": "^16.4.7",
+    "escpos": "3.0.0-alpha.6",
+    "escpos-usb": "3.0.0-alpha.4",
+    "fs-extra": "^11.3.0",
+    "imagemagick": "^0.1.3",
+    "jimp": "^1.6.0",
+    "usb": "1.8.0",
+    "ws": "^8.18.0"
+  }
+}

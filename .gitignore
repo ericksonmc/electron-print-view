@@ -1,6 +1,9 @@
 dist
+out
 src/temp_image.png
 node_modules
 .qodo
+*.log
 
 *.env
+!.env.example

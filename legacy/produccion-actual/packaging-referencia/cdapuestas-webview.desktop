@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=cdapuestas_webview
+Exec=/opt/cdapuestas_webview/cdapuestas-webview %U
+Terminal=false
+Type=Application
+Icon=cdapuestas-webview
+StartupWMClass=Printer Webview
+Comment=Aplicación para cdapuestas
+Categories=Utility;
