@@ -1,7 +1,10 @@
 # CLAUDE.md
 
-Guía para trabajar en este repositorio. Ver también [docs/historia.md](docs/historia.md)
-para el contexto completo de cómo se recuperó y reorganizó el proyecto.
+Guía para trabajar en este repositorio. Ver también
+[docs/historia.md](docs/historia.md) para el contexto completo de cómo se
+recuperó y reorganizó el proyecto, y
+[docs/windows-build.md](docs/windows-build.md) para compilar en Windows
+(toolchain nativo, `pkg`, WinSW, NSIS).
 
 ## Qué es esto
 

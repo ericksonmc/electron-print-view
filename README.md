@@ -2,8 +2,9 @@
 
 App de escritorio de cdapuestas: contenedor/webview a pantalla completa +
 servicio de impresión ESC/POS por WebSocket. Se compila como dos productos
-independientes — ver [CLAUDE.md](CLAUDE.md) para la arquitectura completa y
-[docs/historia.md](docs/historia.md) para de dónde salió este código.
+independientes — ver [CLAUDE.md](CLAUDE.md) para la arquitectura completa,
+[docs/historia.md](docs/historia.md) para de dónde salió este código, y
+[docs/windows-build.md](docs/windows-build.md) si vas a compilar en Windows.
 
 ## Requisitos
 
