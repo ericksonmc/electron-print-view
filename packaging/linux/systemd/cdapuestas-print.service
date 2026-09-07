@@ -1,0 +1,17 @@
+[Unit]
+Description=CDApuestas Print Service (socket de impresión ESC/POS)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/cdapuestas-print-service/cdapuestas-print-service
+Restart=always
+RestartSec=3
+User=cdapuestas-print
+Group=cdapuestas-print
+EnvironmentFile=-/etc/cdapuestas-print/service.env
+StandardOutput=append:/var/log/cdapuestas-print/service.log
+StandardError=append:/var/log/cdapuestas-print/service.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+Package: cdapuestas-print-service
+Version: 1.0.0
+License: unknown
+Vendor: Dataweb C.A.
+Architecture: amd64
+Maintainer: Dataweb C.A.
+Section: default
+Priority: optional
+Conflicts: cdapuestas-webview
+Replaces: cdapuestas-webview
+Description:
+  Servicio de impresión ESC/POS de cdapuestas (solo socket, sin interfaz).

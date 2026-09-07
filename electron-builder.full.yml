@@ -1,0 +1,78 @@
+appId: com.dataweb.cdapuestas.webview
+productName: cdapuestas_webview
+artifactName: cdapuestas-webview-setup-${version}.${ext}
+
+directories:
+  buildResources: build
+  output: dist/full
+
+files:
+  - "**/*"
+  - "!legacy/**"
+  - "!packaging/**"
+  - "!docs/**"
+  - "!tools/**"
+  - "!src/service/**"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
+  - "!**/node_modules/*.d.ts"
+  - "!**/node_modules/.bin"
+  - "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}"
+  - "!.editorconfig"
+  - "!**/._*"
+  - "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}"
+  - "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}"
+  - "!**/{appveyor.yml,.travis.yml,circle.yml}"
+  - "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+
+asarUnpack:
+  - "**/node_modules/usb/**"
+  - "**/node_modules/escpos-usb/**"
+
+publish:
+  provider: github
+  owner: ericksonmc
+  repo: electron-print-view
+  releaseType: release
+
+mac:
+  target:
+    - dmg
+    - zip
+  icon: build/icons/cdapuestas.icns
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: build/icons/cdapuestas.png
+  category: Utility
+  maintainer: Dataweb C.A.
+  description: Aplicación para cdapuestas
+  desktop:
+    StartupWMClass: Printer Webview
+  files:
+    - "**/*"
+    - "!temp/**/*"
+    - "!**/*.tmp"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+        - ia32
+  icon: build/icons/cdapuestas.ico
+  legalTrademarks: Dataweb
+  publisherName: Dataweb C.A.
+  verifyUpdateCodeSignature: false
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icons/cdapuestas.ico
+  uninstallerIcon: build/icons/cdapuestas.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  runAfterFinish: true
+  artifactName: "${productName}-Setup-${version}.${ext}"

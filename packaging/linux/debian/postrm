@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+systemctl stop cdapuestas-print.service || true
+systemctl disable cdapuestas-print.service || true
+systemctl daemon-reload || true

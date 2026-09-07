@@ -1,0 +1,5 @@
+# Permite al usuario/grupo del servicio de impresión (cdapuestas-print) abrir
+# impresoras térmicas USB sin correr como root. Ajustar idVendor/idProduct si
+# la impresora usada no es genérica ESC/POS estándar.
+SUBSYSTEM=="usb", ATTRS{bDeviceClass}=="07", MODE="0664", GROUP="cdapuestas-print"
+SUBSYSTEM=="usb", ATTRS{bInterfaceClass}=="07", MODE="0664", GROUP="cdapuestas-print"

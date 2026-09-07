@@ -1,0 +1,7 @@
+{
+  "assets": [
+    "node_modules/usb/prebuilds/**/*",
+    "node_modules/@thiagoelg/node-printer/prebuilds/**/*",
+    "node_modules/@thiagoelg/node-printer/build/**/*"
+  ]
+}

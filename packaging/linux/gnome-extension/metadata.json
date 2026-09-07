@@ -1,0 +1,7 @@
+{
+  "uuid": "cdapuestas-disable-gestures@dataweb.local",
+  "name": "CDApuestas Disable Gestures",
+  "description": "Bloquea los gestos de GNOME Shell (minimizar, cambiar de ventana) mientras la app de impresión está en pantalla completa, para que el kiosko no se pueda salir de la app con gestos táctiles/de mouse.",
+  "shell-version": ["45", "46", "47", "48"],
+  "url": "https://github.com/ericksonmc/electron-print-view"
+}

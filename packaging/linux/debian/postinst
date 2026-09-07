@@ -1,0 +1,27 @@
+#!/bin/bash
+set -e
+
+if ! getent group cdapuestas-print >/dev/null; then
+    addgroup --system cdapuestas-print
+fi
+if ! getent passwd cdapuestas-print >/dev/null; then
+    adduser --system --ingroup cdapuestas-print --no-create-home --home /nonexistent \
+        --shell /usr/sbin/nologin cdapuestas-print
+fi
+
+mkdir -p /var/log/cdapuestas-print
+chown cdapuestas-print:cdapuestas-print /var/log/cdapuestas-print
+
+mkdir -p /etc/cdapuestas-print
+if [ ! -f /etc/cdapuestas-print/service.env ]; then
+    touch /etc/cdapuestas-print/service.env
+fi
+
+if [ -f /etc/udev/rules.d/70-cdapuestas-print-usb.rules ]; then
+    udevadm control --reload-rules || true
+    udevadm trigger || true
+fi
+
+systemctl daemon-reload || true
+systemctl enable cdapuestas-print.service || true
+systemctl restart cdapuestas-print.service || true
