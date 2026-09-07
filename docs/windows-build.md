@@ -87,11 +87,11 @@ x64 e ia32).
    ```powershell
    npm run build:socket:win
    ```
-   Esto genera `dist\win-socket\cdapuestas-print-service-core.exe`
+   Esto genera `dist\win-socket\cda-print-view-core.exe`
    (ver `pkg.config.json` y el script `build:socket:pkg` en `package.json`).
 
 2. Descargar [WinSW](https://github.com/winsw/winsw/releases) (`WinSW-x64.exe`
-   de la última release), renombrarlo a `cdapuestas-print-service.exe` y
+   de la última release), renombrarlo a `cda-print-view.exe` y
    copiarlo a `dist\win-socket\` junto al `.exe` del paso anterior.
 
 3. Instalar [NSIS](https://nsis.sourceforge.io/Download) (trae `makensis`) y
@@ -100,21 +100,30 @@ x64 e ia32).
    cd packaging\windows
    makensis installer-socket.nsi
    ```
-   El resultado queda en `dist\cdapuestas-print-service-setup.exe`. Ese
-   instalador copia los tres archivos, registra el servicio de Windows vía
-   WinSW (usando `cdapuestas-print.xml`) y lo arranca — ver
+   El resultado queda en **`dist\cda-print-view-setup.exe`** — un único
+   instalador que ya trae todo adentro (el daemon, WinSW y su config). Ese es
+   el archivo que se distribuye: un usuario normal solo lo descarga y lo
+   ejecuta como administrador (el instalador pide elevación); no necesita
+   Node, `pkg`, WinSW ni ningún paso manual — el propio instalador copia los
+   tres archivos, registra el servicio de Windows con arranque **automático**
+   (`<startmode>Automatic</startmode>` en `cda-print-view.xml`, así sigue
+   corriendo después de reiniciar la máquina) y lo arranca de una vez — ver
    [installer-socket.nsi](../packaging/windows/installer-socket.nsi).
 
 ## 5. Verificar el servicio instalado
 
+El servicio queda registrado con el id **`cda-print-view`** (elegido corto y
+a propósito, para que sea fácil de encontrar/buscar en `services.msc` o por
+línea de comandos):
+
 ```powershell
-Get-Service "CDApuestas Print Service"
-Get-Content "$env:ProgramData\cdapuestas-print\logs\cdapuestas-print-service.wrapper.log" -Tail 30
+Get-Service "cda-print-view"
+Get-Content "$env:ProgramData\cda-print-view\logs\cda-print-view.wrapper.log" -Tail 30
 ```
 
 El servicio debe quedar escuchando en `ws://127.0.0.1:1315` (o el puerto que
 se haya configurado en `.env` / la variable `PRINTER_TRANSPORT` en
-`cdapuestas-print.xml`).
+`cda-print-view.xml`).
 
 ## Notas
 

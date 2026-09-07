@@ -1,37 +1,46 @@
 ; Instalador NSIS del build "socket": copia el ejecutable del servicio
 ; (generado por pkg) junto con WinSW ya renombrado, y registra/arranca el
-; servicio de Windows en la instalación. Se compila desde Ubuntu con
-; `makensis` (mismo paquete que usa electron-builder) o con `wine` si no
-; está disponible nativo.
+; servicio de Windows en la instalación. Pensado para que un usuario normal
+; solo baje este .exe y lo ejecute — sin pasos manuales de por medio (WinSW,
+; el XML de configuración y el registro/arranque del servicio ya quedan
+; resueltos por el instalador). El servicio queda con arranque automático
+; (<startmode>Automatic</startmode> en cda-print-view.xml), así que sigue
+; corriendo después de reiniciar sin que el usuario tenga que hacer nada más.
+;
+; Se compila desde Ubuntu con `makensis` (mismo paquete que usa
+; electron-builder) o con `wine` si no está disponible nativo.
 ;
 ; Requiere en dist/win-socket/ antes de compilar:
-;   cdapuestas-print-service-core.exe   (salida de pkg para win-x64)
-;   cdapuestas-print-service.exe        (WinSW-x64.exe descargado y renombrado)
-;   cdapuestas-print.xml                (packaging/windows/cdapuestas-print.xml)
+;   cda-print-view-core.exe   (salida de pkg para win-x64)
+;   cda-print-view.exe        (WinSW-x64.exe descargado y renombrado)
+;   cda-print-view.xml        (packaging/windows/cda-print-view.xml)
 
-!define APP_NAME "CDApuestas Print Service"
-!define INSTALL_DIR "$PROGRAMFILES64\CDApuestasPrintService"
+!define APP_NAME "CDA Print View"
+!define INSTALL_DIR "$PROGRAMFILES64\CDAPrintView"
 
 Name "${APP_NAME}"
-OutFile "..\..\dist\cdapuestas-print-service-setup.exe"
+OutFile "..\..\dist\cda-print-view-setup.exe"
 InstallDir "${INSTALL_DIR}"
 RequestExecutionLevel admin
 
 Section "Install"
   SetOutPath "$INSTDIR"
-  File "..\..\dist\win-socket\cdapuestas-print-service-core.exe"
-  File "..\..\dist\win-socket\cdapuestas-print-service.exe"
-  File /oname=cdapuestas-print-service.xml "cdapuestas-print.xml"
+  File "..\..\dist\win-socket\cda-print-view-core.exe"
+  File "..\..\dist\win-socket\cda-print-view.exe"
+  File /oname=cda-print-view.xml "cda-print-view.xml"
 
-  ExecWait '"$INSTDIR\cdapuestas-print-service.exe" install'
-  ExecWait '"$INSTDIR\cdapuestas-print-service.exe" start'
+  ; Instala, registra el arranque automático (viene definido en el XML) y
+  ; arranca el servicio de una vez — el usuario no tiene que abrir services.msc
+  ; ni la consola para nada.
+  ExecWait '"$INSTDIR\cda-print-view.exe" install'
+  ExecWait '"$INSTDIR\cda-print-view.exe" start'
 
   WriteUninstaller "$INSTDIR\uninstall.exe"
 SectionEnd
 
 Section "Uninstall"
-  ExecWait '"$INSTDIR\cdapuestas-print-service.exe" stop'
-  ExecWait '"$INSTDIR\cdapuestas-print-service.exe" uninstall'
+  ExecWait '"$INSTDIR\cda-print-view.exe" stop'
+  ExecWait '"$INSTDIR\cda-print-view.exe" uninstall'
   Delete "$INSTDIR\*.*"
   RMDir "$INSTDIR"
 SectionEnd

@@ -1,20 +1,20 @@
 <!--
   Configuración de WinSW (https://github.com/winsw/winsw) para correr
-  cdapuestas-print-service como servicio de Windows.
+  cda-print-view como servicio de Windows.
 
   Uso: descargar WinSW-x64.exe desde sus releases de GitHub, renombrarlo a
-  cdapuestas-print-service.exe y colocarlo junto a este XML con el mismo
-  nombre base (cdapuestas-print-service.xml). El instalador NSIS
-  (installer-socket.nsi) hace esto automáticamente durante el build.
+  cda-print-view.exe y colocarlo junto a este XML con el mismo nombre base
+  (cda-print-view.xml). El instalador NSIS (installer-socket.nsi) hace esto
+  automáticamente durante el build — el usuario final solo baja e instala.
 -->
 <service>
-  <id>cdapuestas-print-service</id>
-  <name>CDApuestas Print Service</name>
+  <id>cda-print-view</id>
+  <name>CDA Print View</name>
   <description>Servicio de impresión ESC/POS de cdapuestas (socket WebSocket en el puerto 1315).</description>
-  <executable>%BASE%\cdapuestas-print-service-core.exe</executable>
+  <executable>%BASE%\cda-print-view-core.exe</executable>
   <startmode>Automatic</startmode>
   <onfailure action="restart" delay="5 sec"/>
-  <logpath>%ProgramData%\cdapuestas-print\logs</logpath>
+  <logpath>%ProgramData%\cda-print-view\logs</logpath>
   <log mode="roll-by-size">
     <sizeThreshold>10240</sizeThreshold>
     <keepFiles>5</keepFiles>
