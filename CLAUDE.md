@@ -24,13 +24,16 @@ juntas o por separado en la misma máquina — ver "Los dos builds" abajo.
   Cada shell nuevo necesita `nvm use` explícito; no asumas que el Node del
   `PATH` es el correcto sin comprobarlo (`node -v`).
 - Linux: para compilar el transporte `spooler` (CUPS) hace falta
-  `libcups2-dev` (`sudo apt install libcups2-dev`). El transporte `usb` no lo
-  necesita.
+  `libcups2-dev` (`sudo apt install libcups2-dev`) **y** un `g++` con soporte
+  para `-std=gnu++20` (GCC 10+) — con GCC 9.x (p. ej. Ubuntu 20.04 de fábrica)
+  falla con `unrecognized command line option '-std=gnu++20'`. El transporte
+  `usb` no necesita ninguna de las dos cosas.
 - Para el build `full`, recompilar el módulo nativo `usb` contra Electron
-  (`postinstall`) requiere un `g++` con soporte para `-std=gnu++20` (GCC 10+).
-  En máquinas con un compilador más viejo, `npm install` deja el resto de las
-  dependencias instaladas igual; ese paso solo hace falta antes de un build
-  `full` real con acceso a USB.
+  (`postinstall`) tiene el mismo requisito de GCC 10+.
+- `@thiagoelg/node-printer` es `optionalDependency`: si el compilador del
+  sistema no cumple lo anterior, `npm install` lo deja sin compilar pero no
+  falla — solo queda inutilizable el transporte `spooler` en esa máquina en
+  particular (el resto de la app funciona normal).
 
 ## Arquitectura
 
