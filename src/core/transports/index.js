@@ -3,6 +3,7 @@ const config = require('../config');
 const { printUsb } = require('./usb');
 const { printSpooler } = require('./spooler');
 const { printHexdump } = require('./hexdump');
+const { debugLog } = require('../debugLog');
 
 // Resuelve qué transporte usar para mandar un buffer ESC/POS ya formateado:
 // - 'auto' (default): spooler (RAW) en Windows, USB/libusb en Linux.
@@ -30,6 +31,7 @@ async function send(buffer) {
     await primary(buffer);
   } catch (err) {
     console.error(`[transporte:${primaryName}] falló (${err.message}), probando ${fallbackName}...`);
+    debugLog(`[auto] transporte "${primaryName}" falló (${err.message}), probando "${fallbackName}"...`);
     await fallback(buffer);
   }
 }

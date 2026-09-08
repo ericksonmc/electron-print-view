@@ -24,6 +24,15 @@ InstallDir "${INSTALL_DIR}"
 RequestExecutionLevel admin
 
 Section "Install"
+  ; Si ya hay un servicio instalado (por ejemplo, para actualizar o para
+  ; volver de la variante debug a la normal), lo detenemos y desregistramos
+  ; antes de sobreescribir los binarios: Windows no deja reemplazar el .exe
+  ; mientras el servicio lo tiene abierto.
+  IfFileExists "$INSTDIR\cda-print-view.exe" 0 skip_stop
+    ExecWait '"$INSTDIR\cda-print-view.exe" stop'
+    ExecWait '"$INSTDIR\cda-print-view.exe" uninstall'
+  skip_stop:
+
   SetOutPath "$INSTDIR"
   File "..\..\dist\win-socket\cda-print-view-core.exe"
   File "..\..\dist\win-socket\cda-print-view.exe"

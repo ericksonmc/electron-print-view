@@ -1,0 +1,27 @@
+<!--
+  Variante "debug" de cda-print-view.xml: mismo servicio (mismo <id>, mismo
+  ejecutable), pero agrega DEBUG_LOG=true para que el core escriba un log
+  detallado (impresora resuelta, transporte usado, éxito/error completo por
+  cada trabajo) en C:\Users\Public\Desktop\cda-print-view-debug.log — visible
+  para cualquier usuario que inicie sesión en la máquina, sin tener que ir a
+  buscar el log de WinSW en ProgramData.
+
+  Pensado para reinstalar temporalmente en una máquina con problemas de
+  impresión y diagnosticar más rápido sin acceso remoto — ver
+  installer-socket-debug.nsi y docs/windows-build.md.
+-->
+<service>
+  <id>cda-print-view</id>
+  <name>CDA Print View (debug)</name>
+  <description>Servicio de impresión ESC/POS de cdapuestas (modo debug: log detallado en el escritorio público).</description>
+  <executable>%BASE%\cda-print-view-core.exe</executable>
+  <startmode>Automatic</startmode>
+  <onfailure action="restart" delay="5 sec"/>
+  <logpath>%ProgramData%\cda-print-view\logs</logpath>
+  <log mode="roll-by-size">
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>5</keepFiles>
+  </log>
+  <env name="PRINTER_TRANSPORT" value="auto"/>
+  <env name="DEBUG_LOG" value="true"/>
+</service>
