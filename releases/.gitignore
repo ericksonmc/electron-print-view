@@ -1,0 +1,4 @@
+# Los .deb son binarios grandes (Electron): no se versionan en git.
+# Cada carpeta de release debe contener físicamente su .deb al preparar el
+# pendrive (ver README.md). Para versionarlos haría falta Git LFS.
+*.deb
