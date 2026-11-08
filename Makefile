@@ -47,14 +47,22 @@ release: ## Arma releases/<version>/ a partir del .deb ya construido en dist/ful
 	 ls -1 "$(RELEASE_DIR)"; \
 	 echo "Copia la carpeta $(RELEASE_DIR)/ (o todo releases/) al pendrive con label CDAUPDATE."
 
-# Copia el release actual a un pendrive ya montado: make usb DEST=/media/usuario/CDAUPDATE
-usb: ## Copia releases/<version>/ al pendrive montado (DEST=/ruta/al/usb)
-	@test -n "$(DEST)" || { echo "Indica el destino: make usb DEST=/media/.../CDAUPDATE"; exit 1; }
+# Copia el release actual al pendrive con label CDAUPDATE. Autodetecta el punto
+# de montaje por el label; si no, pásalo explícito: make usb DEST=/media/.../X
+usb: ## Copia releases/<version>/ al pendrive CDAUPDATE (autodetecta; o DEST=/ruta)
 	@test -d "$(RELEASE_DIR)" || { echo "No existe $(RELEASE_DIR)/. Corre 'make deploy' primero."; exit 1; }
-	mkdir -p "$(DEST)/releases"
-	cp -r "$(RELEASE_DIR)" "$(DEST)/releases/"
-	sync
-	@echo "Copiado $(RELEASE_DIR) a $(DEST)/releases/. Ya puedes expulsar el USB."
+	@dest="$(DEST)"; \
+	 if [ -z "$$dest" ]; then dest=$$(findmnt -frno TARGET LABEL=CDAUPDATE 2>/dev/null | head -n 1); fi; \
+	 if [ -z "$$dest" ]; then dest=$$(lsblk -rno MOUNTPOINT,LABEL 2>/dev/null | awk '$$2=="CDAUPDATE"{print $$1; exit}'); fi; \
+	 if [ -z "$$dest" ]; then \
+	   echo "No encontré un pendrive montado con label CDAUPDATE."; \
+	   echo "Conéctalo (debe automontarse) o pásalo explícito: make usb DEST=/media/.../CDAUPDATE"; exit 1; \
+	 fi; \
+	 echo "Pendrive CDAUPDATE en: $$dest"; \
+	 mkdir -p "$$dest/releases"; \
+	 cp -r "$(RELEASE_DIR)" "$$dest/releases/"; \
+	 sync; \
+	 echo "Copiado $(RELEASE_DIR) a $$dest/releases/. Ya puedes expulsar el USB."
 
 clean: ## Borra la salida de build (dist/)
 	rm -rf dist
