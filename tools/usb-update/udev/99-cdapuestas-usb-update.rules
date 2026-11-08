@@ -1,0 +1,6 @@
+# Dispara la actualización del printView al insertar un USB con label CDAUPDATE.
+# Instalar en /etc/udev/rules.d/ (ver ../README.md) — una sola vez por máquina.
+#
+# Se usa systemd-run --no-block para desacoplar: udev mata los procesos largos
+# que lanza directamente con RUN, así que el trabajo real corre fuera de udev.
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="CDAUPDATE", RUN+="/usr/bin/systemd-run --no-block /usr/local/bin/cdapuestas-usb-update.sh /dev/%k"
