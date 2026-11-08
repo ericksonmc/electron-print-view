@@ -26,8 +26,14 @@ que se copia tal cual a un pendrive.
    versión previa si una actualización falla (rollback): basta correr el
    `autostart.sh` de la carpeta vieja.
 
-4. Para publicar un update nuevo: crea la carpeta de la nueva versión, copia
-   dentro el `.deb` nuevo y una copia de `autostart.sh`, y listo.
+4. Para publicar un update nuevo, lo más fácil es el **Makefile** de la raíz:
+   bumpea la versión en `package.json` y corre `make deploy` — genera el `.deb`
+   y crea `releases/<version>/` con el `.deb` + el `autostart.sh`. A mano:
+   crea la carpeta de la nueva versión, copia dentro el `.deb` y una copia de
+   `autostart.template.sh` como `autostart.sh`.
+
+El `autostart.sh` de cada versión es idéntico (toma el `.deb` de su propia
+carpeta); el maestro es `autostart.template.sh` en esta carpeta.
 
 ## Cómo se aplica en la máquina
 
