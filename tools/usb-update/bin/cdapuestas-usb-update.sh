@@ -1,28 +1,32 @@
 #!/usr/bin/env bash
 #
-# Actualiza el printView del kiosko autoservicio desde un USB.
-# Lo dispara la regla udev al insertar un USB con label CDAUPDATE (ver
-# ../udev/99-cdapuestas-usb-update.rules). Instala en /usr/local/bin/ en la
-# máquina (ver README.md).
+# Actualiza el printView ("full" / CD Apuestas WebView) de un kiosko Ubuntu
+# desde un USB. Lo dispara la regla udev al insertar un USB con label CDAUPDATE
+# (ver ../udev/99-cdapuestas-usb-update.rules). Instalar en /usr/local/bin/ en
+# la máquina (ver README.md).
 #
-# Flujo: monta el USB (solo lectura), lee la config (update.env del USB),
-# copia el AppImage nuevo de forma atómica sobre la ruta que lanza el watcher,
-# y mata el proceso para que el watcher relance el AppImage ya actualizado.
-# De ahí en adelante las próximas actualizaciones entran solas por OTA.
+# Modelo del kiosko (ver ../../docs/kiosk-linux.md): la app se instala como
+# paquete .deb (binario en /opt/cdapuestas_webview/cdapuestas-webview) y un
+# supervisor de usuario la relanza si muere. Por eso este update:
+#   1) instala el .deb nuevo,
+#   2) corrige permisos de chrome-sandbox,
+#   3) mata el proceso; el supervisor relanza el binario ya actualizado.
+# Después, si en el futuro se migra a AppImage, las actualizaciones podrían
+# entrar por OTA (electron-updater no auto-actualiza paquetes .deb).
 set -euo pipefail
 
 DEV="${1:?uso: $0 /dev/sdX1}"
 LOG="/var/log/cdapuestas-usb-update.log"
 exec >>"$LOG" 2>&1
 
-# Muestra el mensaje en el log y, si se puede, en la consola física (tty1),
-# para que el encargado vea algo en una máquina sin interfaz gráfica.
+# Mensaje al log y, si se puede, a la consola física (tty1): el kiosko no tiene
+# interfaz de escritorio, pero la sesión corre en un VT.
 say() {
   echo "[$(date '+%F %T')] $*"
   [ -w /dev/tty1 ] && echo ">> CDApuestas: $*" >/dev/tty1 2>/dev/null || true
 }
 
-say "==== Actualización desde $DEV ===="
+say "==== Actualización de printView desde $DEV ===="
 
 MNT="$(mktemp -d /run/cdapuestas-usb.XXXXXX)"
 cleanup() { umount "$MNT" 2>/dev/null || true; rmdir "$MNT" 2>/dev/null || true; }
@@ -30,29 +34,39 @@ trap cleanup EXIT
 
 mount -o ro "$DEV" "$MNT"
 
-# Defaults; el update.env del USB los sobrescribe. El USB es un medio de
-# confianza preparado por nosotros, por eso se puede 'source'.
-APPIMAGE_FILE="cdapuestas-webview.AppImage"
-INSTALL_PATH="/opt/cdapuestas/printview.AppImage"
-PROCESS_MATCH="printview.AppImage"
+# Defaults; el update.env del USB (medio de confianza, preparado por nosotros)
+# los sobrescribe. DEB_FILE vacío = usar el .deb más nuevo que haya en el USB.
+DEB_FILE=""
+PROCESS_MATCH='^/opt/cdapuestas_webview/cdapuestas-webview( |$)'
+SANDBOX_FIX="/usr/local/sbin/cdapuestas-fix-sandbox"
 # shellcheck disable=SC1091
 [ -f "$MNT/update.env" ] && . "$MNT/update.env"
 
-SRC="$MNT/$APPIMAGE_FILE"
-if [ ! -f "$SRC" ]; then
-  say "ERROR: no se encontró $APPIMAGE_FILE en el USB. Nada que instalar."
+# Resolver el .deb a instalar.
+if [ -n "$DEB_FILE" ]; then
+  DEB_PATH="$MNT/$DEB_FILE"
+else
+  DEB_PATH="$(ls -1t "$MNT"/cdapuestas-webview-*.deb 2>/dev/null | head -n 1 || true)"
+fi
+if [ -z "${DEB_PATH:-}" ] || [ ! -f "$DEB_PATH" ]; then
+  say "ERROR: no se encontró el .deb de CD Apuestas WebView en el USB."
   exit 1
 fi
+say "Instalando $(basename "$DEB_PATH")..."
 
-say "Instalando printView nuevo..."
-install -d "$(dirname "$INSTALL_PATH")"
-TMP="${INSTALL_PATH}.new"
-cp "$SRC" "$TMP"
-chmod +x "$TMP"
-mv -f "$TMP" "$INSTALL_PATH"   # reemplazo atómico
-say "AppImage instalado en $INSTALL_PATH"
+export DEBIAN_FRONTEND=noninteractive
+if ! apt-get install -y "$DEB_PATH"; then
+  say "apt falló; reparando dependencias..."
+  dpkg -i "$DEB_PATH" || true
+  apt-get -f install -y
+fi
 
-say "Reiniciando printView (el watcher lo relanzará)..."
+# Reaplicar permisos del sandbox de Chromium (chrome-sandbox root:root 4755).
+if [ -x "$SANDBOX_FIX" ]; then
+  "$SANDBOX_FIX" || true
+fi
+
+say "Reiniciando el WebView (el supervisor lo relanzará)..."
 pkill -f "$PROCESS_MATCH" || true
 
 say "Listo. Ya puedes retirar el USB."

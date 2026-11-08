@@ -2,9 +2,13 @@
 
 Guía para trabajar en este repositorio. Ver también
 [docs/historia.md](docs/historia.md) para el contexto completo de cómo se
-recuperó y reorganizó el proyecto, y
+recuperó y reorganizó el proyecto,
 [docs/windows-build.md](docs/windows-build.md) para compilar en Windows
-(toolchain nativo, `pkg`, WinSW, NSIS).
+(toolchain nativo, `pkg`, WinSW, NSIS), y
+[docs/kiosk-linux.md](docs/kiosk-linux.md) para cómo quedan configuradas las
+máquinas autoservicio (Ubuntu + GNOME Kiosk, instalación por `.deb`, supervisor,
+autologin) y cómo se actualizan (USB en `tools/usb-update/`, y el límite del OTA
+con `.deb`).
 
 ## Qué es esto
 
