@@ -37,7 +37,12 @@ function configureAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', () => {
-    sendStatusToWindow('Update downloaded. Will install on restart.');
+    sendStatusToWindow('Actualización descargada. Instalando...');
+    // Kiosko autoservicio sin operador: la actualización se aplica sola en vez
+    // de esperar un reinicio manual (la app nunca se cierra por sí sola).
+    // isForceRunAfter=false: no la relanza electron-updater, lo hace el watcher
+    // bash del kiosko sobre el AppImage ya reemplazado.
+    setImmediate(() => autoUpdater.quitAndInstall(true, false));
   });
 }
 
