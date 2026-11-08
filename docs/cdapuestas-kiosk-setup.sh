@@ -283,6 +283,11 @@ SCALE="$SCALE_FACTOR"
 URL="$KIOSK_URL"
 APP_PID=""
 
+# Comando que usa el WebView para apagar la máquina desde el menú "Apagar"
+# (lo lee main.js como SHUTDOWN_COMMAND). systemctl poweroff lo permite
+# logind/polkit para la sesión local activa sin contraseña.
+export SHUTDOWN_COMMAND="systemctl poweroff"
+
 mkdir -p "\$HOME/.cache"
 exec 9>"\$LOCK"
 

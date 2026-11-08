@@ -128,7 +128,9 @@ ipcMain.on('check-for-updates', () => {
 // dentro del kiosko "full" — el servicio de impresión headless no lo expone.
 function resolveShutdownCommand() {
   if (config.shutdownCommand) return config.shutdownCommand;
-  return process.platform === 'win32' ? 'shutdown /s /t 0' : 'shutdown -h now';
+  // Linux: systemctl poweroff lo permite logind/polkit para la sesión local
+  // activa sin contraseña; es más fiable que `shutdown` para el usuario kiosko.
+  return process.platform === 'win32' ? 'shutdown /s /t 0' : 'systemctl poweroff';
 }
 
 ipcMain.on('shutdown-machine', () => {
