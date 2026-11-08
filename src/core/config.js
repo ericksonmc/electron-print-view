@@ -28,6 +28,10 @@ const config = {
   printerName: process.env.PRINTER_NAME || '',
   debugLog: process.env.DEBUG_LOG === 'true',
   debugLogPath: process.env.DEBUG_LOG_PATH || defaultDebugLogPath(),
+  // Comando de apagado del equipo. Opcional: si se deja vacío se usa el
+  // default por plataforma (ver src/app/main.js). Permite sobrescribirlo por
+  // máquina cuando el default no aplica.
+  shutdownCommand: process.env.SHUTDOWN_COMMAND || '',
 };
 
 module.exports = config;

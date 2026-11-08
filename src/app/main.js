@@ -1,7 +1,9 @@
 const net = require('net');
 const path = require('path');
+const { exec } = require('child_process');
 const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
 
 const config = require('../core/config');
 const server = require('../core/server');
@@ -113,4 +115,24 @@ app.on('will-quit', () => {
 
 ipcMain.on('check-for-updates', () => {
   autoUpdater.checkForUpdatesAndNotify();
+});
+
+// Apagado del equipo pedido desde la web (fin de jornada en el kiosko). La web
+// ya autoriza la acción con el QR de sesión; aquí solo ejecutamos el apagado
+// del SO. Como esto vive en el preload/ventana Electron, solo está disponible
+// dentro del kiosko "full" — el servicio de impresión headless no lo expone.
+function resolveShutdownCommand() {
+  if (config.shutdownCommand) return config.shutdownCommand;
+  return process.platform === 'win32' ? 'shutdown /s /t 0' : 'shutdown -h now';
+}
+
+ipcMain.on('shutdown-machine', () => {
+  const cmd = resolveShutdownCommand();
+  log.info(`[shutdown] ejecutando: ${cmd}`);
+  exec(cmd, (error) => {
+    if (error) {
+      // Sin privilegios o comando inválido: se registra y la app sigue viva.
+      log.error(`[shutdown] falló: ${error.message}`);
+    }
+  });
 });
