@@ -10,6 +10,8 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+WANT="$(basename "$HERE")"
+PKG="cdapuestas-webview"
 LOG="/var/log/cdapuestas-usb-update.log"
 exec >>"$LOG" 2>&1
 
@@ -18,7 +20,7 @@ say() {
   [ -w /dev/tty1 ] && echo ">> CDApuestas: $*" >/dev/tty1 2>/dev/null || true
 }
 
-say "==== Actualización a $(basename "$HERE") ===="
+say "==== Actualización a $WANT ===="
 
 DEB="$(ls -1t "$HERE"/cdapuestas-webview-*.deb 2>/dev/null | head -n 1 || true)"
 if [ -z "${DEB:-}" ] || [ ! -f "$DEB" ]; then
@@ -28,17 +30,27 @@ fi
 
 say "Instalando $(basename "$DEB")..."
 export DEBIAN_FRONTEND=noninteractive
-if ! apt-get install -y "$DEB"; then
-  say "apt falló; reparando dependencias..."
+if ! apt-get install -y --allow-downgrades "$DEB"; then
+  say "apt-get install falló; intentando dpkg + 'apt-get -f install'..."
   dpkg -i "$DEB" || true
-  apt-get -f install -y
+  apt-get -f install -y || true
 fi
+
+# Confirmar que realmente quedó instalada la versión esperada. apt/dpkg pueden
+# "terminar" sin aplicar nada (p. ej. choque de archivos por otro paquete), así
+# que verificamos contra dpkg antes de cantar éxito.
+GOT="$(dpkg-query -W -f='${Version}' "$PKG" 2>/dev/null || true)"
+if [ "$GOT" != "$WANT" ]; then
+  say "ERROR: la versión instalada de $PKG es '${GOT:-ninguna}', se esperaba '$WANT'. El update NO se aplicó."
+  exit 1
+fi
+say "Versión instalada confirmada: $PKG $GOT"
 
 if [ -x /usr/local/sbin/cdapuestas-fix-sandbox ]; then
   /usr/local/sbin/cdapuestas-fix-sandbox || true
 fi
 
-say "Reiniciando el WebView (el supervisor lo relanzará)..."
+say "Reiniciando el WebView (donde haya supervisor, lo relanzará)..."
 pkill -f '^/opt/cdapuestas_webview/cdapuestas-webview( |$)' || true
 
 say "Listo. Ya puedes retirar el USB."
