@@ -46,8 +46,16 @@ if [ "$GOT" != "$WANT" ]; then
 fi
 say "Versión instalada confirmada: $PKG $GOT"
 
+# chrome-sandbox: en estos kioscos (Ubuntu 24.04, con user-namespaces no
+# privilegiados restringidos por AppArmor) el sandbox SUID tiene que quedar en
+# 4755 root:root. El postinst del .deb a veces lo deja en 0755 (cree que puede
+# usar el sandbox de user-ns), y entonces Electron no arranca. Forzamos 4755.
+SANDBOX="/opt/cdapuestas_webview/chrome-sandbox"
 if [ -x /usr/local/sbin/cdapuestas-fix-sandbox ]; then
   /usr/local/sbin/cdapuestas-fix-sandbox || true
+elif [ -f "$SANDBOX" ]; then
+  chown root:root "$SANDBOX" || true
+  chmod 4755 "$SANDBOX" || true
 fi
 
 say "Reiniciando el WebView (donde haya supervisor, lo relanzará)..."
