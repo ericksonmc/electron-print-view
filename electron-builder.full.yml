@@ -13,6 +13,12 @@ files:
   - "!docs/**"
   - "!tools/**"
   - "!src/service/**"
+  # dist/ (salida del build) y releases/ (catálogo con los .deb) no son parte de
+  # la app; sin esto se empaquetan dentro del asar y cada build siguiente infla
+  # el .deb de forma recursiva (dist/full del build anterior metido adentro).
+  - "!dist/**"
+  - "!releases/**"
+  - "!**/*.{deb,AppImage,rpm,snap,exe,dmg}"
   - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
   - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
   - "!**/node_modules/*.d.ts"
@@ -55,6 +61,14 @@ linux:
     - "**/*"
     - "!temp/**/*"
     - "!**/*.tmp"
+    - "!dist/**"
+    - "!releases/**"
+
+# El nombre del paquete queda fijo en 'cdapuestas-webview' (el que ya tiene toda
+# la flota instalada). Si cambia, dpkg lo trata como paquete nuevo y choca por
+# los archivos compartidos en /opt/cdapuestas_webview al actualizar por USB.
+deb:
+  packageName: cdapuestas-webview
 
 win:
   target:
