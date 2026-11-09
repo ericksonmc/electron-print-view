@@ -63,8 +63,12 @@ usb: ## Copia releases/<version>/ al pendrive CDAUPDATE (autodetecta; o DEST=/ru
 	 mkdir -p "$$dest/releases"; \
 	 rm -rf "$$dest/releases/$(VERSION)"; \
 	 cp -r "$(RELEASE_DIR)" "$$dest/releases/$(VERSION)"; \
+	 rm -rf "$$dest/usb-update"; \
+	 cp -r tools/usb-update "$$dest/usb-update"; \
 	 sync; \
-	 echo "Copiado $(RELEASE_DIR) a $$dest/releases/$(VERSION). Ya puedes expulsar el USB."
+	 echo "Copiado $(RELEASE_DIR) y el kit usb-update/ a $$dest. Ya puedes expulsar el USB."; \
+	 echo "En un kiosko nuevo (una sola vez), por consola:"; \
+	 echo "  sudo bash $$dest/usb-update/bin/cdapuestas-kiosk-bootstrap.sh"
 
 clean: ## Borra la salida de build (dist/)
 	rm -rf dist

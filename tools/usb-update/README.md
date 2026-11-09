@@ -19,7 +19,19 @@ Las actualizaciones (el `.deb` + su `autostart.sh`) viven versionadas en
 
 ## 1. Preparar cada máquina (una sola vez)
 
-Con root en la máquina:
+Los kioscos están tras NAT (sin IP pública ni SSH entrante), así que este paso
+se hace **en sitio, con el mismo pendrive**: abre una consola y corre el
+bootstrap, que instala el kit **y de paso aplica el update** que trae el USB:
+
+```bash
+sudo bash /media/<usuario>/CDAUPDATE/usb-update/bin/cdapuestas-kiosk-bootstrap.sh
+```
+
+Es el único toque manual por máquina. De ahí en adelante, solo insertar el
+pendrive `CDAUPDATE` dispara la actualización sola (regla udev). `make usb` ya
+deja en el pendrive la carpeta `usb-update/` con este script.
+
+Si prefieres instalar solo el kit sin actualizar (con root en la máquina):
 
 ```bash
 sudo install -m 0755 bin/cdapuestas-usb-update.sh /usr/local/bin/cdapuestas-usb-update.sh
