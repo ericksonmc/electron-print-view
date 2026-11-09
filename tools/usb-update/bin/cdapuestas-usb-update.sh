@@ -15,6 +15,9 @@ DEV="${1:?uso: $0 /dev/sdX1}"
 LOG="/var/log/cdapuestas-usb-update.log"
 exec >>"$LOG" 2>&1
 
+HERE="$(cd "$(dirname "$0")" && pwd)"
+UI="$HERE/cdapuestas-usb-update-ui.sh"
+
 say() {
   echo "[$(date '+%F %T')] $*"
   [ -w /dev/tty1 ] && echo ">> CDApuestas: $*" >/dev/tty1 2>/dev/null || true
@@ -23,7 +26,13 @@ say() {
 say "==== USB de actualización detectado en $DEV ===="
 
 MNT="$(mktemp -d /run/cdapuestas-usb.XXXXXX)"
-cleanup() { umount "$MNT" 2>/dev/null || true; rmdir "$MNT" 2>/dev/null || true; }
+ORIG_VT=""
+cleanup() {
+  umount "$MNT" 2>/dev/null || true
+  rmdir "$MNT" 2>/dev/null || true
+  # Volver siempre al VT original (donde está el WebView), pase lo que pase.
+  [ -n "$ORIG_VT" ] && chvt "$ORIG_VT" 2>/dev/null || true
+}
 trap cleanup EXIT
 
 mount -o ro "$DEV" "$MNT"
@@ -46,5 +55,16 @@ fi
 say "Aplicando versión $(basename "$VERDIR")..."
 # El pendrive es un medio de confianza preparado por nosotros; se ejecuta su
 # autostart.sh (vive junto al .deb de esa versión).
-bash "$VERDIR/autostart.sh"
+#
+# Feedback en pantalla: con kbd (openvt/fgconsole) abrimos un VT nuevo que
+# muestra banner + progreso en vivo, y al terminar la trap vuelve al WebView.
+# Sin kbd, corre igual pero el avance solo queda en el log.
+if [ -f "$UI" ] && command -v openvt >/dev/null 2>&1 && command -v fgconsole >/dev/null 2>&1; then
+  ORIG_VT="$(fgconsole 2>/dev/null || true)"
+  say "Mostrando ventana de actualización en consola (VT)."
+  openvt -s -w -- bash "$UI" "$VERDIR" || say "La ventana de actualización terminó con error."
+else
+  say "Sin kbd o UI; aplico el update sin ventana."
+  bash "$VERDIR/autostart.sh"
+fi
 say "Proceso de actualización finalizado."

@@ -35,7 +35,9 @@ Si prefieres instalar solo el kit sin actualizar (con root en la máquina):
 
 ```bash
 sudo install -m 0755 bin/cdapuestas-usb-update.sh /usr/local/bin/cdapuestas-usb-update.sh
+sudo install -m 0755 bin/cdapuestas-usb-update-ui.sh /usr/local/bin/cdapuestas-usb-update-ui.sh
 sudo install -m 0644 udev/99-cdapuestas-usb-update.rules /etc/udev/rules.d/99-cdapuestas-usb-update.rules
+sudo apt-get install -y kbd   # openvt/chvt para la ventana de actualización en pantalla
 sudo udevadm control --reload
 ```
 
@@ -51,6 +53,8 @@ el USB solo la carpeta de la versión anterior.
 
 ## 3. Actualizar
 
-Enciende la máquina e inserta el USB `CDAUPDATE`. Progreso y resultado quedan en
-`/var/log/cdapuestas-usb-update.log` y, si se puede, en la consola física
-(`/dev/tty1`).
+Enciende la máquina e inserta el USB `CDAUPDATE`. En pantalla aparece una
+consola a pantalla completa (VT nuevo) con un banner "ACTUALIZACION EN CURSO" y
+el progreso en vivo; al terminar vuelve solo al WebView. En máquinas sin `kbd`
+corre igual, pero sin esa ventana. Progreso y resultado quedan siempre en
+`/var/log/cdapuestas-usb-update.log`.

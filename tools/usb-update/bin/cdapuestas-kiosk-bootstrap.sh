@@ -25,15 +25,23 @@ KIT="$(cd "$HERE/.." && pwd)"           # .../usb-update
 USBROOT="$(cd "$KIT/.." && pwd)"        # raíz del pendrive (CDAUPDATE)
 
 LAUNCHER="$KIT/bin/cdapuestas-usb-update.sh"
+UI="$KIT/bin/cdapuestas-usb-update-ui.sh"
 RULES="$KIT/udev/99-cdapuestas-usb-update.rules"
-for f in "$LAUNCHER" "$RULES"; do
+for f in "$LAUNCHER" "$UI" "$RULES"; do
   [ -f "$f" ] || { echo "ERROR: no encuentro $f en el pendrive." >&2; exit 1; }
 done
 
 echo ">> 1/2 Instalando el kit de update por USB (una sola vez)..."
 install -m 0755 "$LAUNCHER" /usr/local/bin/cdapuestas-usb-update.sh
+install -m 0755 "$UI" /usr/local/bin/cdapuestas-usb-update-ui.sh
 install -m 0644 "$RULES" /etc/udev/rules.d/99-cdapuestas-usb-update.rules
 udevadm control --reload
+# kbd trae openvt/chvt/fgconsole, que el lanzador usa para mostrar la ventana de
+# actualización en pantalla (VT). Si ya está, no hace nada.
+if ! command -v openvt >/dev/null 2>&1; then
+  echo "   Instalando kbd (para la ventana de actualización en pantalla)..."
+  apt-get install -y kbd || echo "   (aviso: no pude instalar kbd; el update correrá sin ventana)"
+fi
 echo "   Listo: a partir de ahora, insertar el pendrive CDAUPDATE actualiza solo."
 
 echo ">> 2/2 Aplicando la actualización desde el pendrive..."
