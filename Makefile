@@ -51,7 +51,8 @@ release: ## Arma releases/<version>/ a partir del .deb ya construido en dist/ful
 # de montaje por el label; si no, pásalo explícito: make usb DEST=/media/.../X
 usb: ## Copia releases/<version>/ al pendrive CDAUPDATE (autodetecta; o DEST=/ruta)
 	@test -d "$(RELEASE_DIR)" || { echo "No existe $(RELEASE_DIR)/. Corre 'make deploy' primero."; exit 1; }
-	@dest="$(DEST)"; \
+	@set -e; \
+	 dest="$(DEST)"; \
 	 if [ -z "$$dest" ]; then dest=$$(findmnt -frno TARGET LABEL=CDAUPDATE 2>/dev/null | head -n 1); fi; \
 	 if [ -z "$$dest" ]; then dest=$$(lsblk -rno MOUNTPOINT,LABEL 2>/dev/null | awk '$$2=="CDAUPDATE"{print $$1; exit}'); fi; \
 	 if [ -z "$$dest" ]; then \
@@ -60,9 +61,10 @@ usb: ## Copia releases/<version>/ al pendrive CDAUPDATE (autodetecta; o DEST=/ru
 	 fi; \
 	 echo "Pendrive CDAUPDATE en: $$dest"; \
 	 mkdir -p "$$dest/releases"; \
-	 cp -r "$(RELEASE_DIR)" "$$dest/releases/"; \
+	 rm -rf "$$dest/releases/$(VERSION)"; \
+	 cp -r "$(RELEASE_DIR)" "$$dest/releases/$(VERSION)"; \
 	 sync; \
-	 echo "Copiado $(RELEASE_DIR) a $$dest/releases/. Ya puedes expulsar el USB."
+	 echo "Copiado $(RELEASE_DIR) a $$dest/releases/$(VERSION). Ya puedes expulsar el USB."
 
 clean: ## Borra la salida de build (dist/)
 	rm -rf dist
