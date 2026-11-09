@@ -1,0 +1,57 @@
+===========================================================
+  ACTUALIZACION CD APUESTAS - INSTRUCCIONES DEL PENDRIVE
+===========================================================
+
+Este pendrive actualiza la aplicacion CD Apuestas (el WebView) de las
+maquinas. Hay dos casos segun si la maquina ya fue preparada o no.
+
+
+-----------------------------------------------------------
+CASO 1 - MAQUINA NUEVA (primera vez con este pendrive)
+-----------------------------------------------------------
+1. Enciende la maquina y espera a que cargue normal.
+2. Conecta el pendrive.
+3. Abre una terminal (prueba Ctrl+Alt+T) y escribe esta linea tal cual,
+   luego presiona Enter:
+
+      sudo bash /media/*/CDAUPDATE/usb-update/bin/cdapuestas-kiosk-bootstrap.sh
+
+   Si pide contraseña, escribe la clave del equipo (no se ve al teclear;
+   escribela y presiona Enter).
+4. Aparece una pantalla negra que dice "ACTUALIZACION EN CURSO".
+   >> NO apagues el equipo. Espera 1 a 2 minutos. <<
+5. Cuando diga "ACTUALIZACION COMPLETA" y la pantalla vuelva sola a lo
+   normal, retira el pendrive. Listo.
+
+
+-----------------------------------------------------------
+CASO 2 - MAQUINA YA PREPARADA (actualizaciones siguientes)
+-----------------------------------------------------------
+1. Con la maquina encendida, SOLO conecta el pendrive. No escribas nada.
+2. Sale sola la pantalla "ACTUALIZACION EN CURSO".
+   >> NO apagues el equipo. <<
+3. Cuando termine y vuelva a la pantalla normal, retira el pendrive.
+
+   Nota: si al conectar no pasa nada, es que a esa maquina todavia no se
+   le hizo el CASO 1. Haz el CASO 1 una vez y ya queda lista para siempre.
+
+
+-----------------------------------------------------------
+SI ALGO SALE MAL
+-----------------------------------------------------------
+- Si la pantalla queda en texto y no vuelve sola: apaga y enciende la
+  maquina. La version anterior sigue funcionando; no se daña nada.
+- Lo que paso en cada intento queda guardado en la maquina, en el archivo:
+      /var/log/cdapuestas-usb-update.log
+- Soporte: ___________________________________
+
+
+-----------------------------------------------------------
+QUE TRAE EL PENDRIVE (referencia tecnica)
+-----------------------------------------------------------
+  releases/<version>/   la aplicacion (.deb) + su instalador (autostart.sh)
+  usb-update/           el kit que instala el bootstrap del CASO 1
+  INSTRUCCIONES.txt     este archivo
+
+Se aplica siempre la version mas alta presente en releases/.
+===========================================================

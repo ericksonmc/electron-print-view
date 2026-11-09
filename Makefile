@@ -65,6 +65,7 @@ usb: ## Copia releases/<version>/ al pendrive CDAUPDATE (autodetecta; o DEST=/ru
 	 cp -r "$(RELEASE_DIR)" "$$dest/releases/$(VERSION)"; \
 	 rm -rf "$$dest/usb-update"; \
 	 cp -r tools/usb-update "$$dest/usb-update"; \
+	 cp tools/usb-update/INSTRUCCIONES-PENDRIVE.txt "$$dest/INSTRUCCIONES.txt"; \
 	 sync; \
 	 echo "Copiado $(RELEASE_DIR) y el kit usb-update/ a $$dest. Ya puedes expulsar el USB."; \
 	 echo "En un kiosko nuevo (una sola vez), por consola:"; \
