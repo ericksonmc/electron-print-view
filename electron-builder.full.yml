@@ -39,6 +39,7 @@ files:
 asarUnpack:
   - "**/node_modules/usb/**"
   - "**/node_modules/escpos-usb/**"
+  - "**/node_modules/@thiagoelg/node-printer/**"
 
 publish:
   provider: github

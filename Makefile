@@ -27,6 +27,7 @@ install: ## Instala dependencias (npm + módulos nativos)
 	npm install
 
 build: ## Genera el .deb del build full (Linux) en dist/full/
+	@test -f node_modules/@thiagoelg/node-printer/build/Release/node_printer.node || { echo "Falta node-printer compilado: CC=gcc-10 CXX=g++-10 npm install && npx electron-builder install-app-deps"; exit 1; }
 	npm run build:full:linux
 
 # deploy = build + empaquetar la versión actual en releases/<version>/ con su
