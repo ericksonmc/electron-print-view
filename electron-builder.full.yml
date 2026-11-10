@@ -75,6 +75,7 @@ linux:
 # los archivos compartidos en /opt/cdapuestas_webview al actualizar por USB.
 deb:
   packageName: cdapuestas-webview
+  afterInstall: build/linux/after-install.tpl
 
 win:
   target:

@@ -1,4 +1,14 @@
 const escpos = require('escpos');
+
+// escpos-usb espera la API de usb 1.x (eventos en el módulo raíz); en usb 2.x
+// los eventos viven en `usb.usb`.
+const nodeUsb = require('usb');
+if (typeof nodeUsb.on !== 'function' && nodeUsb.usb) {
+  require.cache[require.resolve('usb')].exports = Object.assign(Object.create(nodeUsb.usb), {
+    getDeviceList: nodeUsb.getDeviceList,
+    findByIds: nodeUsb.findByIds,
+  });
+}
 escpos.USB = require('escpos-usb');
 
 // Envía el buffer ESC/POS ya formateado directo a la impresora USB por
