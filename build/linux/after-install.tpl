@@ -28,12 +28,10 @@ fi
 
 # La app corre como el usuario de la kiosk (no está en el grupo lp): sin esta
 # regla libusb no puede abrir la impresora térmica (LIBUSB_ERROR_ACCESS).
-cat > /etc/udev/rules.d/70-cdapuestas-printer-usb.rules <<'RULES'
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0519", MODE="0666"
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="04b8", MODE="0666"
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0416", MODE="0666"
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="0fe6", MODE="0666"
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="1fc9", MODE="0666"
+# Cubre cualquier impresora USB (clase 07), sea cual sea el fabricante.
+rm -f /etc/udev/rules.d/70-cdapuestas-printer-usb.rules
+cat > /etc/udev/rules.d/99-cdapuestas-printer-usb.rules <<'RULES'
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{ID_USB_INTERFACES}=="*:0701*:*", MODE="0666"
 RULES
 udevadm control --reload-rules 2>/dev/null || true
 udevadm trigger --subsystem-match=usb --action=change 2>/dev/null || true
