@@ -29,6 +29,11 @@ falló el USB.
 | 1.1.3 | `usb` vuelve a 2.x (`^2.14.0`, 2.19.1). Todavía fallaba (`usb.on is not a function`). **No se commiteó** (`releases/1.1.3/` sin versionar). |
 | 1.1.4 | Shim en `src/core/transports/usb.js` (los eventos de `usb` 2.x viven en `usb.usb`) y regla udev por fabricante en el `.deb`. Funciona con la Masung (`0519`); no cubría la STMicro (`0483`). |
 | 1.1.5 | Regla udev genérica por clase de impresora (`ID_USB_INTERFACES=*:0701*`), reemplaza la de 1.1.4. **Versión estable actual.** |
+| 1.1.6 | Agrega `[qr size=N]`/`[qr width=N]` y evita el salto extra después de `[CUT]`. Se probó localmente, pero no se instaló en la flota. |
+| 1.1.7 | Rebuild trazable de esos cambios. Instalado y probado el 2026-11-17 en `cda-kiosk-calendario`: el WebSocket confirmó una impresión de QR `[qr size=5]`. |
+| 1.1.8 | Reduce de dos a una línea el espacio que deja `[CDAPUESTAS]` tras el logo. Instalado como prueba; reveló que el postinst dejaba el sandbox de Chromium sin SUID en Ubuntu. |
+| 1.1.9 | Conserva el ajuste de logo y corrige el postinst: `chrome-sandbox` queda siempre `root:root 4755`. Instalado y relanzado correctamente en `cda-kiosk-calendario` el 2026-11-17. |
+| 1.1.10 | Aplica la separación de una línea al tag `[img]`, que es el que usan los tickets de animalitos y triples para su logo. Instalado en `cda-kiosk-calendario` el 2026-11-17. |
 
 Además hay un permiso: la app corre como el usuario de la kiosk, que no está en
 el grupo `lp`; sin regla udev `libusb` devuelve `LIBUSB_ERROR_ACCESS`. El
@@ -39,7 +44,7 @@ el grupo `lp`; sin regla udev `libusb` devuelve `LIBUSB_ERROR_ACCESS`. El
 
 | Kiosk | Acceso | Impresora | Versión |
 |---|---|---|---|
-| `cda-kiosk-calendario` (oficina) | `cda-kiosk-calendario@192.168.0.30` (LAN) | Masung `0519:2013` | **1.1.4** |
+| `cda-kiosk-calendario` (oficina) | `cda-kiosk-calendario@192.168.0.30` (LAN) | Masung `0519:2013` | **1.1.10** (probado 2026-11-17) |
 | `cdakiosk-001` | `cdakiosk01@100.109.149.26` (Tailscale) | STMicro `0483:5743` | 1.1.5 |
 | `cdapuestas-kiosk-002` | `cdapuestaskiosk02@100.81.227.21` (Tailscale) | STMicro `0483:5743` | 1.1.5 |
 | `cdapuestas-kiosk-002-1` | `cdapuestas02@100.65.51.32` (Tailscale) | STMicro `0483:5743` | 1.1.5 |
@@ -78,6 +83,9 @@ Verificación después de actualizar (no dar por buena una kiosk sin esto):
 
 ## Reglas: qué se debe hacer
 
+- Cada `.deb` nuevo se instala y prueba primero en
+  `cda-kiosk-calendario@192.168.0.30` cuando el kiosco local esté disponible,
+  antes de distribuirlo a otras máquinas.
 - **Node 24 y `nvm use`** antes de cualquier `npm`/`node`.
 - **Compilar `node-printer` con GCC 10+**: `CC=gcc-10 CXX=g++-10 npm install`
   y luego `npx electron-builder install-app-deps` (recompila contra Electron).
@@ -121,20 +129,8 @@ Verificación después de actualizar (no dar por buena una kiosk sin esto):
 
 ## Pendiente (a 2026-11-10)
 
-1. **Decidir el tamaño del QR y el salto tras el corte** (ver
-   `../../docs/autoservicio-pago-e-impresion-2026-11-10.md`). Hay dos caminos:
-   - **Actualizar el printView a 1.1.6.** Ya hay cambios sin commit en
-     `src/core/formatter.js`: atributo `[qr size=N]` y no emitir el `0a` final
-     cuando el texto termina en `[CUT]`. Estos cambios dejaron `package.json` en
-     1.1.6 y un build local (`releases/1.1.6/`) sin commit ni instalar en ninguna
-     kiosk. **No se despliega hasta que se autorice.**
-   - **Sin tocar el printView:** que las taquillas generen el QR como imagen del
-     tamaño deseado y lo manden con `[img]` (el formateador actual ya lo imprime).
-     Requiere agregar una librería de QR a `v0-animalitos` y `v0-triples`.
-2. Las taquillas web tienen cambios sin commit que mandan `[qr size=5]`; con el
-   printView actual el atributo se ignora y el QR sale grande. **No desplegarlas
-   hasta resolver el punto 1.**
-3. `cda-kiosk-calendario` sigue en 1.1.4 (funciona; subirla a 1.1.5 no es urgente).
-4. `releases/1.1.3/` quedó sin versionar (versión intermedia con el shim incompleto).
-5. El QR de verificación no se agregó a la impresión de la taquilla Angular de
-   `centro-de-apuestas` (solo a las taquillas v0).
+1. Validar visualmente el ticket de prueba con logo de `1.1.10` en
+   `cda-kiosk-calendario`. El servicio confirmó la impresión el 2026-11-17.
+2. Antes de instalar `1.1.10` en otra máquina, conservar esa validación y seguir el
+   procedimiento de actualización de este documento.
+3. `releases/1.1.3/` es una versión intermedia con el shim incompleto; no usarla.

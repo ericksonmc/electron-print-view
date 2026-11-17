@@ -10,13 +10,12 @@ else
     ln -sf '/opt/${sanitizedProductName}/${executable}' '/usr/bin/${executable}'
 fi
 
-# Check if user namespaces are supported by the kernel and working with a quick test:
-if ! { [[ -L /proc/self/ns/user ]] && unshare --user true; }; then
-    # Use SUID chrome-sandbox only on systems without user namespaces:
-    chmod 4755 '/opt/${sanitizedProductName}/chrome-sandbox' || true
-else
-    chmod 0755 '/opt/${sanitizedProductName}/chrome-sandbox' || true
-fi
+# El postinst corre como root, por lo que una prueba de `unshare --user` aquí no
+# refleja si el usuario de la kiosk puede crear user namespaces. En Ubuntu esto
+# dejaba el sandbox en 0755 y Electron abortaba al relanzar. El helper SUID es
+# el fallback soportado por Chromium cuando esos namespaces no están disponibles.
+chown root:root '/opt/${sanitizedProductName}/chrome-sandbox' || true
+chmod 4755 '/opt/${sanitizedProductName}/chrome-sandbox' || true
 
 if hash update-mime-database 2>/dev/null; then
     update-mime-database /usr/share/mime || true

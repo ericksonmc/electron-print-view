@@ -32,7 +32,9 @@ async function format(input) {
       printer.feed().cut();
       endedWithCut = true;
     } else if (trimmedLine.toUpperCase() === '[CDAPUESTAS]') {
-      await printBase64Image(cdapuestasLogo, printer);
+      // El logo ya ocupa 67 puntos verticales; dos feeds adicionales dejan un
+      // hueco excesivo antes de la primera línea del ticket.
+      await printBase64Image(cdapuestasLogo, printer, 1);
     } else if (trimmedLine.toUpperCase() === '[NEXT]') {
       printer.newLine();
     } else if (trimmedLine.toUpperCase() === '[FLUSH]') {
@@ -216,7 +218,7 @@ function applyStyleTag(tagName, styleStack, printer) {
   styleStack.push({ tag: tagName, revert: revertFn });
 }
 
-async function printBase64Image(base64String, printer) {
+async function printBase64Image(base64String, printer, trailingFeed = 1) {
   let imagePath;
   try {
     const tempDir = os.tmpdir();
@@ -231,7 +233,7 @@ async function printBase64Image(base64String, printer) {
     await new Promise((resolve) => {
       escpos.Image.load(imagePath, (image) => {
         printer.align('ct').raster(image);
-        printer.feed(2);
+        printer.feed(trailingFeed);
         resolve();
       });
     });
