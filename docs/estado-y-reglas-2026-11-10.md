@@ -1,0 +1,140 @@
+# Estado del printView y reglas de trabajo (2026-11-10)
+
+Resumen de lo que pasó el 2026-11-10 con la impresión en las kioscos, cómo
+quedó cada máquina y, sobre todo, **qué se debe y qué no se debe hacer** con el
+printView. Si vas a tocar este repo, lee primero la sección de reglas.
+
+## Cómo imprime una kiosk
+
+```
+taquilla web (v0-animalitos / v0-triples, en iframe)
+  └─ WebSocket ws://127.0.0.1:1315   { text: "[img]logo[/img]\n<ticket>[CUT]" }
+       └─ src/core/server.js → formatter.js (tags → bytes ESC/POS)
+            └─ transports/index.js  'auto' en Linux:
+                 1. usb.js     → escpos-usb → libusb → impresora térmica
+                 2. spooler.js → @thiagoelg/node-printer → CUPS   (solo si USB falla)
+```
+
+El mensaje "No hay una impresora por defecto configurada" **no es la causa**:
+sale del fallback al spooler cuando el USB ya falló. Hay que mirar por qué
+falló el USB.
+
+## Qué se rompió y por qué (cronología)
+
+| Versión | Qué pasó |
+|---|---|
+| 1.1.0 | Se subió `usb` a 3.x (`3b296c8`) para compilar contra Electron 34. `usb` 3.x es una reescritura estilo WebUSB **sin la API clásica**: `escpos-usb` fallaba con `usb.getDeviceList is not a function`. **El USB quedó roto desde aquí.** |
+| 1.1.1 | Fija `executableName`. Salió **sin** `@thiagoelg/node-printer`: es `optionalDependency`, falló al compilar con `g++` 9 y `npm` la dejó vacía sin avisar. Error visible: `Cannot find module '@thiagoelg/node-printer'`. |
+| 1.1.2 | Incluye `node-printer` (compilado con `CC=gcc-10 CXX=g++-10`), lo agrega a `asarUnpack` y `make build` falla si falta el `.node`. |
+| 1.1.3 | `usb` vuelve a 2.x (`^2.14.0`, 2.19.1). Todavía fallaba (`usb.on is not a function`). **No se commiteó** (`releases/1.1.3/` sin versionar). |
+| 1.1.4 | Shim en `src/core/transports/usb.js` (los eventos de `usb` 2.x viven en `usb.usb`) y regla udev por fabricante en el `.deb`. Funciona con la Masung (`0519`); no cubría la STMicro (`0483`). |
+| 1.1.5 | Regla udev genérica por clase de impresora (`ID_USB_INTERFACES=*:0701*`), reemplaza la de 1.1.4. **Versión estable actual.** |
+
+Además hay un permiso: la app corre como el usuario de la kiosk, que no está en
+el grupo `lp`; sin regla udev `libusb` devuelve `LIBUSB_ERROR_ACCESS`. El
+`after-install` del `.deb` (`build/linux/after-install.tpl`) crea
+`/etc/udev/rules.d/99-cdapuestas-printer-usb.rules` y borra la de 1.1.4.
+
+## Inventario de kioscos (2026-11-10)
+
+| Kiosk | Acceso | Impresora | Versión |
+|---|---|---|---|
+| `cda-kiosk-calendario` (oficina) | `cda-kiosk-calendario@192.168.0.30` (LAN) | Masung `0519:2013` | **1.1.4** |
+| `cdakiosk-001` | `cdakiosk01@100.109.149.26` (Tailscale) | STMicro `0483:5743` | 1.1.5 |
+| `cdapuestas-kiosk-002` | `cdapuestaskiosk02@100.81.227.21` (Tailscale) | STMicro `0483:5743` | 1.1.5 |
+| `cdapuestas-kiosk-002-1` | `cdapuestas02@100.65.51.32` (Tailscale) | STMicro `0483:5743` | 1.1.5 |
+
+- Dos máquinas comparten el hostname `cdapuestas-kiosk-002`; se distinguen por IP y por usuario.
+- Tailscale rechaza SSH con un usuario que no sea el de esa máquina
+  (`tailnet policy does not permit you to SSH as user ...`).
+- La contraseña de `sudo` la escribe quien actualiza; nunca se guarda en el repo.
+
+## Cómo se actualiza una kiosk por Tailscale
+
+Desde la PC de desarrollo (la kiosk debe estar `Connected` en Tailscale):
+
+```bash
+KIOSK=<usuario>@100.x.y.z
+scp releases/<ver>/cdapuestas-webview-setup-<ver>.deb $KIOSK:/tmp/
+ssh -t $KIOSK 'sudo dpkg -i /tmp/cdapuestas-webview-setup-<ver>.deb \
+  && sudo chmod 4755 /opt/cdapuestas_webview/chrome-sandbox; \
+  sudo pkill -f "^/opt/cdapuestas_webview/cdapuestas-webview"; \
+  dpkg -l cdapuestas-webview | tail -1'
+```
+
+El supervisor (`~/bin/start-cdapuestas-webview.sh`) relanza la app a los pocos
+segundos. Por USB (pendrive) sigue valiendo `make usb`.
+
+Verificación después de actualizar (no dar por buena una kiosk sin esto):
+
+1. `dpkg -l cdapuestas-webview` muestra la versión nueva.
+2. Existe `/etc/udev/rules.d/99-cdapuestas-printer-usb.rules` y el nodo
+   `/dev/bus/usb/BBB/DDD` de la impresora es `crw-rw-rw-`.
+3. Prueba USB directa bajo la ABI de Electron:
+   `ELECTRON_RUN_AS_NODE=1 NODE_PATH=/opt/cdapuestas_webview/resources/app.asar/node_modules /opt/cdapuestas_webview/cdapuestas-webview -e '...printUsb(...)'`.
+4. Prueba por el socket real: `ws://127.0.0.1:1315` debe responder
+   `{"status":"success","message":"Impresión completada."}`.
+5. Un ticket de verdad desde la taquilla.
+
+## Reglas: qué se debe hacer
+
+- **Node 24 y `nvm use`** antes de cualquier `npm`/`node`.
+- **Compilar `node-printer` con GCC 10+**: `CC=gcc-10 CXX=g++-10 npm install`
+  y luego `npx electron-builder install-app-deps` (recompila contra Electron).
+  Comprobar que existe
+  `node_modules/@thiagoelg/node-printer/build/Release/node_printer.node`.
+- **Subir la versión en cada `.deb` que llegue a una máquina**, aunque el
+  cambio sea chico. Las kioscos ya tienen instaladas versiones rotas; reinstalar
+  el mismo número no deja rastro de qué tenía cada una.
+- **Probar bajo Electron, no solo con Node.** El módulo nativo y el shim de
+  `usb` se prueban con `ELECTRON_RUN_AS_NODE=1` (ver arriba), porque Node 24 y
+  Electron 34 tienen ABI distinta.
+- **Mantener `usb` en `^2.x`** y el shim de `usb.js` mientras se use `escpos-usb`.
+- **Probar el cambio de impresión en una kiosk real** (hay una en la oficina)
+  antes de tocar las demás.
+- **Comprobar que la app corre con** `pgrep -f "^/opt/cdapuestas_webview/cdapuestas-webview --force"`.
+  El supervisor la abre con `--force-device-scale-factor=2`; un `pgrep` con `$`
+  al final da falso negativo.
+- **Anclar el patrón del `pkill`** con `^` para no matar la propia sesión SSH.
+- **Documentar y commitear** `package.json`, `package-lock.json`, `electron-builder.full.yml`,
+  `build/linux/after-install.tpl` y `releases/<ver>/autostart.sh` (el `.deb` no se commitea: está en `.gitignore`).
+
+## Reglas: qué NO se debe hacer
+
+- **No actualizar kioscos sin que el dueño lo pida.** El 2026-11-10 se dijo
+  explícitamente: *"si hay que actualizar el printView no lo hagas"*. Si una
+  solución exige un printView nuevo, hay que **proponerla y esperar**, y buscar
+  primero una alternativa que se resuelva solo en las taquillas web.
+- **No subir `usb` a 3.x.** No tiene la API clásica y rompe `escpos-usb`
+  (la impresión cae al spooler y falla).
+- **No quitar ni "limpiar" el `asarUnpack` de `node-printer`** ni el guard del
+  `Makefile`.
+- **No tocar la gramática de tags ni el puerto 1315** sin coordinar con las
+  taquillas. `[qr]` sin atributos imprime a `size: 10` (~57 mm para una URL
+  larga); cupones y tokens dependen de ese tamaño.
+- **No usar OTA ni AppImage** en las kioscos: `electron-updater` no actualiza un
+  `.deb`. Los errores `No published versions on GitHub` del log son inofensivos.
+- **No editar a mano las reglas udev ni `chrome-sandbox`** como solución
+  permanente; las gestiona el `.deb`. (`cdakiosk-001` conserva una regla manual
+  vieja, `99-usb-printer.rules`, que es inofensiva.)
+- **No commitear el `.deb`, contraseñas ni claves de Tailscale.**
+
+## Pendiente (a 2026-11-10)
+
+1. **Decidir el tamaño del QR y el salto tras el corte** (ver
+   `../../docs/autoservicio-pago-e-impresion-2026-11-10.md`). Hay dos caminos:
+   - **Actualizar el printView a 1.1.6.** Ya hay cambios sin commit en
+     `src/core/formatter.js`: atributo `[qr size=N]` y no emitir el `0a` final
+     cuando el texto termina en `[CUT]`. Estos cambios dejaron `package.json` en
+     1.1.6 y un build local (`releases/1.1.6/`) sin commit ni instalar en ninguna
+     kiosk. **No se despliega hasta que se autorice.**
+   - **Sin tocar el printView:** que las taquillas generen el QR como imagen del
+     tamaño deseado y lo manden con `[img]` (el formateador actual ya lo imprime).
+     Requiere agregar una librería de QR a `v0-animalitos` y `v0-triples`.
+2. Las taquillas web tienen cambios sin commit que mandan `[qr size=5]`; con el
+   printView actual el atributo se ignora y el QR sale grande. **No desplegarlas
+   hasta resolver el punto 1.**
+3. `cda-kiosk-calendario` sigue en 1.1.4 (funciona; subirla a 1.1.5 no es urgente).
+4. `releases/1.1.3/` quedó sin versionar (versión intermedia con el shim incompleto).
+5. El QR de verificación no se agregó a la impresión de la taquilla Angular de
+   `centro-de-apuestas` (solo a las taquillas v0).

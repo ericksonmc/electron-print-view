@@ -10,6 +10,13 @@ máquinas autoservicio (Ubuntu + GNOME Kiosk, instalación por `.deb`, superviso
 autologin) y cómo se actualizan (USB en `tools/usb-update/`, y el límite del OTA
 con `.deb`).
 
+**Antes de tocar impresión o de actualizar una kiosk, lee
+[docs/estado-y-reglas-2026-11-10.md](docs/estado-y-reglas-2026-11-10.md):** estado
+de cada máquina, qué se rompió (`usb` 3.x, `node-printer` sin compilar, permisos
+udev) y las reglas de qué se debe y qué no se debe hacer. La más importante:
+**no actualices kioscos sin que te lo pidan**; si una solución exige un printView
+nuevo, propónla y espera.
+
 ## Qué es esto
 
 App de escritorio de cdapuestas con dos funciones que se pueden compilar por
@@ -35,8 +42,9 @@ juntas o por separado en la misma máquina — ver "Los dos builds" abajo.
   para `-std=gnu++20` (GCC 10+) — con GCC 9.x (p. ej. Ubuntu 20.04 de fábrica)
   falla con `unrecognized command line option '-std=gnu++20'`. El transporte
   `usb` no necesita ninguna de las dos cosas.
-- Para el build `full`, recompilar el módulo nativo `usb` contra Electron
-  (`postinstall`) tiene el mismo requisito de GCC 10+.
+- `usb` 2.x trae binarios N-API precompilados, así que ya no se compila. El
+  `postinstall` sí recompila `node-printer` contra Electron: en una máquina con
+  GCC 9 por defecto, exporta `CC=gcc-10 CXX=g++-10` antes de `npm install`.
 - `@thiagoelg/node-printer` es `optionalDependency`: si el compilador del
   sistema no cumple lo anterior, `npm install` lo deja sin compilar pero no
   falla — solo queda inutilizable el transporte `spooler` en esa máquina en
@@ -131,7 +139,20 @@ reabre una conexión real como hacía en el código legado con USB directo) y
 - Node 24 no tiene binarios precompilados para `@thiagoelg/node-printer`
   todavía en algunas plataformas; por eso es `optionalDependency` y
   `spooler.js` lo `require()` de forma perezosa. Si falta, solo falla el
-  transporte `spooler`, no el resto de la app.
+  transporte `spooler`, no el resto de la app. **Pero un `.deb` sin él sale roto
+  sin aviso** (pasó con 1.1.1): compílalo con `CC=gcc-10 CXX=g++-10 npm install`
+  y `npx electron-builder install-app-deps`; `make build` falla si falta el `.node`.
+- **`usb` debe quedarse en `^2.x`.** La 3.x no tiene la API clásica que usa
+  `escpos-usb` (`usb.getDeviceList`) y la impresión por USB deja de funcionar.
+  `usb.js` lleva un shim porque en 2.x los eventos viven en `usb.usb`.
+- Los permisos USB los da `build/linux/after-install.tpl` (regla udev genérica
+  para clase impresora). Sin ella, `LIBUSB_ERROR_ACCESS`.
+- `[qr]` se ajusta a un ancho máximo de 160 puntos (~20 mm). El frontend lo
+  cambia con `[qr width=N]` (puntos, 8 ≈ 1 mm) o fija el módulo con
+  `[qr size=N]`. Hasta la 1.1.5 era `size: 10` fijo (~57 mm) y los atributos se
+  ignoraban.
+- "No hay una impresora por defecto configurada" viene del fallback al spooler:
+  la causa real casi siempre es que falló el USB.
 
 ## Contribuir / dónde tocar qué
 

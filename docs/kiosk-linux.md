@@ -75,6 +75,15 @@ La vía oficial es por **USB**, porque la app se distribuye como `.deb`
   `autostart.sh`, que instala el `.deb`, reaplica el fix de sandbox y reinicia
   el WebView (el supervisor lo relanza con la versión nueva).
 
+### Actualizar por Tailscale (kioscos con acceso remoto)
+
+Si la kiosk está `Connected` en Tailscale se actualiza sin pendrive, con `scp` +
+`dpkg -i` desde la PC de desarrollo. Los pasos, la verificación posterior, el
+inventario de máquinas (usuario, IP, impresora, versión) y las reglas de qué se
+debe y qué no se debe hacer están en
+[`estado-y-reglas-2026-11-10.md`](estado-y-reglas-2026-11-10.md). El `.deb` crea
+la regla udev de la impresora USB, así que no hay que tocar permisos a mano.
+
 ### Sobre el OTA (no se usa)
 
 El printView tiene electron-updater configurado (GitHub releases

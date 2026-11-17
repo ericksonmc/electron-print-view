@@ -1,6 +1,7 @@
 const path = require('path');
 const os = require('os');
 const escpos = require('escpos');
+const qr = require('qr-image');
 const fs = require('fs-extra');
 const { BufferAdapter } = require('./transports/buffer-adapter');
 const { cdapuestasLogo } = require('./assets/logo');
@@ -19,14 +20,17 @@ async function format(input) {
   printer.size(0.5, 0.5);
   const lines = input.split(/\r?\n|\r|\[NEXT\]/g);
 
+  let endedWithCut = false;
   for (const line of lines) {
     const trimmedLine = line.trim();
     if (!trimmedLine) continue;
+    endedWithCut = false;
 
     if (trimmedLine.toUpperCase() === '[LINE]') {
       printer.drawLine();
     } else if (trimmedLine.toUpperCase() === '[CUT]') {
       printer.feed().cut();
+      endedWithCut = true;
     } else if (trimmedLine.toUpperCase() === '[CDAPUESTAS]') {
       await printBase64Image(cdapuestasLogo, printer);
     } else if (trimmedLine.toUpperCase() === '[NEXT]') {
@@ -38,7 +42,8 @@ async function format(input) {
     }
   }
 
-  printer.newLine();
+  // Un salto después del corte avanzaría el papel y sumaría margen arriba del siguiente ticket.
+  if (!endedWithCut) printer.newLine();
   printer.flush();
   return adapter.toBuffer();
 }
@@ -90,6 +95,20 @@ async function processLine(line, printer) {
   if (buffer) printer.text(buffer);
 }
 
+const QR_DEFAULT_WIDTH = 160;
+const QR_MIN_MODULE = 3;
+const QR_MARGIN = 2;
+
+function qrModuleSize(content, maxWidth) {
+  const modules = qr.matrix(content).length + QR_MARGIN * 2;
+  return Math.max(QR_MIN_MODULE, Math.floor(maxWidth / modules));
+}
+
+function numericAttr(tagParts, name) {
+  const value = Number((tagParts.find((p) => p.startsWith(`${name}=`)) || '').slice(name.length + 1));
+  return value > 0 ? value : null;
+}
+
 async function handleOpenTag(tagContent, line, styleStack, printer, startPos) {
   const tagParts = tagContent.toLowerCase().split(' ');
   const tagName = tagParts[0];
@@ -106,12 +125,17 @@ async function handleOpenTag(tagContent, line, styleStack, printer, startPos) {
       case 'bar':
         printer.style('B').align('ct').barcode(content, 'CODE39', { width: 250, height: 80 });
         break;
-      case 'qr':
+      case 'qr': {
+        // [qr width=N]: ancho máximo en puntos (203 dpi, 8 pts ≈ 1 mm). [qr size=N]: módulo fijo en puntos.
+        const width = numericAttr(tagParts, 'width') || QR_DEFAULT_WIDTH;
+        const size = numericAttr(tagParts, 'size') || qrModuleSize(content, width);
+        const qrOptions = { type: 'png', size, margin: QR_MARGIN };
         await new Promise((resolve) => {
-          printer.align('ct').qrimage(content, { type: 'png', size: 10 }, resolve);
+          printer.align('ct').qrimage(content, qrOptions, resolve);
         });
         printer.feed(2);
         break;
+      }
       case 'table': {
         const MAX_COLUMNS = 4;
         const rows = content.split('|').filter((row) => row.trim());
