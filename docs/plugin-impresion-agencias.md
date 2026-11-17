@@ -9,7 +9,7 @@ restringir la máquina como en un kiosco.
 |---|---|---|
 | Paquete | `cdapuestas-webview` | `cdapuestas-print-service` |
 | Archivo | `cdapuestas-webview-setup-<ver>.deb` | `cdapuestas-print-service-<ver>-amd64.deb` |
-| Qué instala | Electron a pantalla completa + servicio embebido | daemon systemd sin ventana (binario `pkg` con Node 24) |
+| Qué instala | Electron a pantalla completa + servicio embebido | daemon systemd sin ventana (binario `pkg` con Node 24, todo embebido) |
 | Ruta | `/opt/cdapuestas_webview/` | `/opt/cdapuestas-print-service/` |
 | Corre como | usuario de la kiosk | usuario de sistema `cdapuestas-print` (systemd `cdapuestas-print.service`) |
 | Config | `.env` | `/etc/cdapuestas-print/service.env` (variables de `.env.example`) |
@@ -36,6 +36,34 @@ make deploy        # build (webview) + build-plugin + release
 Detalles del build: `npm run build:socket:linux` corre `pkg` con
 `node24-linux-x64` (`node20` obligaba a compilar Node desde fuente y fallaba) y
 luego `packaging/linux/build-socket-deb.sh`.
+
+## Dependencias: qué trae cada instalador
+
+El objetivo es que instalar no falle por dependencias ni necesite internet.
+
+**`.deb` (Linux)**
+- Node va **embebido** en el binario (`pkg`, Node 24); no hace falta Node en la máquina.
+- `libusb` viene compilado dentro del módulo `usb`; su única librería extra,
+  `libudev.so.1`, se empaqueta en `/opt/cdapuestas-print-service/lib/`
+  (copia en `packaging/linux/lib/`, para que el build sea igual en cualquier
+  máquina) y el servicio la carga con `LD_LIBRARY_PATH` desde la unit systemd.
+- `Depends` solo pide `libc6 (>= 2.31)`, `libstdc++6` y `libgcc-s1`, que están
+  en cualquier Ubuntu 20.04+/Debian 11+ de escritorio o servidor.
+- El `postinst` usa `groupadd`/`useradd` (base del sistema), no `adduser`.
+- Probado: `dpkg -i` en contenedores limpios de Ubuntu 24.04 y Debian 11 sin
+  instalar nada más (en Ubuntu 20.04 el binario arrancó, no se repitió la
+  instalación completa tras el último cambio). Requisito: amd64 con systemd.
+
+**`.exe` (Windows)**
+- `cda-print-view-core.exe` lleva Node embebido y no necesita el Visual C++
+  Redistributable (solo DLLs del propio Windows).
+- El `node_printer.node` solo usa `KERNEL32` y `WINSPOOL.DRV`; `usb` usa su
+  binario N-API precompilado.
+- WinSW (`WinSW-x64.exe` v2.12.0) es un ejecutable de .NET autocontenido: no
+  requiere tener .NET instalado. El script avisa si lo descargado pesa muy poco
+  (señal de que sería la variante que sí lo necesita).
+- El instalador NSIS solo copia archivos; no descarga nada.
+- Windows 10/11 x64.
 
 ## Instalar / actualizar en una agencia
 

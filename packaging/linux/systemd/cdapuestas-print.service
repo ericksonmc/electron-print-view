@@ -9,6 +9,7 @@ Restart=always
 RestartSec=3
 User=cdapuestas-print
 Group=cdapuestas-print
+Environment=LD_LIBRARY_PATH=/opt/cdapuestas-print-service/lib
 EnvironmentFile=-/etc/cdapuestas-print/service.env
 StandardOutput=append:/var/log/cdapuestas-print/service.log
 StandardError=append:/var/log/cdapuestas-print/service.log

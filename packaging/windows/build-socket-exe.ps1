@@ -31,6 +31,9 @@ if (-not (Test-Path "$outDir\cda-print-view-core.exe")) { throw "pkg no generó 
 $winsw = "$outDir\cda-print-view.exe"
 if (-not (Test-Path $winsw)) {
   Invoke-WebRequest "https://github.com/winsw/winsw/releases/download/$WinSwVersion/WinSW-x64.exe" -OutFile $winsw
+  if ((Get-Item $winsw).Length -lt 3MB) {
+    throw "WinSW pesa muy poco: no parece la variante autocontenida (requeriría .NET en la agencia)."
+  }
 }
 
 Push-Location packaging\windows

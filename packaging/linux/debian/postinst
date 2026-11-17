@@ -2,10 +2,10 @@
 set -e
 
 if ! getent group cdapuestas-print >/dev/null; then
-    addgroup --system cdapuestas-print
+    groupadd --system cdapuestas-print
 fi
 if ! getent passwd cdapuestas-print >/dev/null; then
-    adduser --system --ingroup cdapuestas-print --no-create-home --home /nonexistent \
+    useradd --system --gid cdapuestas-print --no-create-home --home-dir /nonexistent \
         --shell /usr/sbin/nologin cdapuestas-print
 fi
 

@@ -16,7 +16,7 @@ fi
 
 rm -rf "$STAGE_DIR"
 mkdir -p "$STAGE_DIR/DEBIAN"
-mkdir -p "$STAGE_DIR/opt/cdapuestas-print-service"
+mkdir -p "$STAGE_DIR/opt/cdapuestas-print-service/lib"
 mkdir -p "$STAGE_DIR/lib/systemd/system"
 mkdir -p "$STAGE_DIR/etc/udev/rules.d"
 
@@ -27,6 +27,8 @@ sed -i "s/^Version:.*/Version: $VERSION/" "$STAGE_DIR/DEBIAN/control"
 
 cp "$PKG_BIN" "$STAGE_DIR/opt/cdapuestas-print-service/cdapuestas-print-service"
 chmod 755 "$STAGE_DIR/opt/cdapuestas-print-service/cdapuestas-print-service"
+
+cp "$ROOT_DIR/packaging/linux/lib/libudev.so.1" "$STAGE_DIR/opt/cdapuestas-print-service/lib/"
 
 cp "$ROOT_DIR/packaging/linux/systemd/cdapuestas-print.service" "$STAGE_DIR/lib/systemd/system/"
 cp "$ROOT_DIR/packaging/linux/systemd/99-cdapuestas-printer-usb.rules" "$STAGE_DIR/etc/udev/rules.d/"
