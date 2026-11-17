@@ -14,7 +14,7 @@
     "build:full:linux": "electron-builder --config electron-builder.full.yml --linux",
     "build:full:win": "electron-builder --config electron-builder.full.yml --win",
     "build:socket:pkg": "pkg src/service/index.js --config pkg.config.json --output dist/pkg/cdapuestas-print-service",
-    "build:socket:linux": "npm run build:socket:pkg -- --targets node20-linux-x64 && bash packaging/linux/build-socket-deb.sh",
+    "build:socket:linux": "npm run build:socket:pkg -- --targets node24-linux-x64 --output dist/pkg/cdapuestas-print-service-linux && bash packaging/linux/build-socket-deb.sh",
     "build:socket:win": "npm run build:socket:pkg -- --targets node24-win-x64 --output dist/win-socket/cda-print-view-core.exe",
     "publish:full": "electron-builder --config electron-builder.full.yml --publish always",
     "postinstall": "electron-builder install-app-deps"

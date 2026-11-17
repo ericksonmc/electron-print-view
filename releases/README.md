@@ -16,9 +16,13 @@ que se copia tal cual a un pendrive.
      ...
    ```
 
-2. Dentro de cada carpeta **siempre** van dos cosas:
+2. Dentro de cada carpeta **siempre** van tres cosas:
    - el `.deb` de esa versión (`cdapuestas-webview-setup-<ver>.deb`), generado
      con `npm run build:full:linux`;
+   - el `.deb` del plugin de impresión sin WebView
+     (`cdapuestas-print-service-<ver>-amd64.deb`) para las PCs de agencia, ver
+     [`../docs/plugin-impresion-agencias.md`](../docs/plugin-impresion-agencias.md);
+     el `autostart.sh` de los kioscos lo ignora;
    - `autostart.sh`, el script que se ejecuta al conectar el pendrive e instala
      el `.deb` de **esa misma carpeta**.
 
@@ -28,7 +32,7 @@ que se copia tal cual a un pendrive.
 
 4. Para publicar un update nuevo, lo más fácil es el **Makefile** de la raíz:
    bumpea la versión en `package.json` y corre `make deploy` — genera el `.deb`
-   y crea `releases/<version>/` con el `.deb` + el `autostart.sh`. A mano:
+   y crea `releases/<version>/` con los dos `.deb` + el `autostart.sh`. A mano:
    crea la carpeta de la nueva versión, copia dentro el `.deb` y una copia de
    `autostart.template.sh` como `autostart.sh`.
 

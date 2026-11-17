@@ -29,7 +29,7 @@ cp "$PKG_BIN" "$STAGE_DIR/opt/cdapuestas-print-service/cdapuestas-print-service"
 chmod 755 "$STAGE_DIR/opt/cdapuestas-print-service/cdapuestas-print-service"
 
 cp "$ROOT_DIR/packaging/linux/systemd/cdapuestas-print.service" "$STAGE_DIR/lib/systemd/system/"
-cp "$ROOT_DIR/packaging/linux/systemd/70-cdapuestas-print-usb.rules" "$STAGE_DIR/etc/udev/rules.d/"
+cp "$ROOT_DIR/packaging/linux/systemd/99-cdapuestas-printer-usb.rules" "$STAGE_DIR/etc/udev/rules.d/"
 
 dpkg-deb --build --root-owner-group "$STAGE_DIR" "$ROOT_DIR/dist/cdapuestas-print-service-${VERSION}-amd64.deb"
 

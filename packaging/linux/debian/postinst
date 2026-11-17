@@ -17,10 +17,9 @@ if [ ! -f /etc/cdapuestas-print/service.env ]; then
     touch /etc/cdapuestas-print/service.env
 fi
 
-if [ -f /etc/udev/rules.d/70-cdapuestas-print-usb.rules ]; then
-    udevadm control --reload-rules || true
-    udevadm trigger || true
-fi
+rm -f /etc/udev/rules.d/70-cdapuestas-print-usb.rules
+udevadm control --reload-rules || true
+udevadm trigger --subsystem-match=usb --action=change || true
 
 systemctl daemon-reload || true
 systemctl enable cdapuestas-print.service || true

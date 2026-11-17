@@ -8,5 +8,4 @@ Section: default
 Priority: optional
 Conflicts: cdapuestas-webview
 Replaces: cdapuestas-webview
-Description:
-  Servicio de impresión ESC/POS de cdapuestas (solo socket, sin interfaz).
+Description: Servicio de impresión ESC/POS de cdapuestas (solo socket, sin interfaz)

@@ -70,6 +70,70 @@ ssh -t $KIOSK 'sudo dpkg -i /tmp/cdapuestas-webview-setup-<ver>.deb \
 El supervisor (`~/bin/start-cdapuestas-webview.sh`) relanza la app a los pocos
 segundos. Por USB (pendrive) sigue valiendo `make usb`.
 
+También existe el comando de distribución por lote del `Makefile`:
+
+```bash
+# Una kiosk por alias
+make tailscale-check KIOSK=cdakiosk-001 # solo prueba la conexión, no instala
+make tailscale-update KIOSK=cdakiosk-001
+make tailscale-update KIOSK=cdapuestas-kiosk-002
+make tailscale-update KIOSK=cdapuestas-kiosk-002-1
+
+# Las tres kioscos, en ese orden
+make tailscale-update KIOSK=all
+```
+
+El target envía el `.deb` por la entrada estándar de `tailscale ssh`, instala
+con `sudo`, reinicia el WebView y valida la versión, la regla udev y el proceso.
+No usa `scp` ni guarda la contraseña de `sudo`. Requiere que cada kiosk tenga
+**Tailscale SSH habilitado** (`sudo tailscale set --ssh`) y que la ACL del
+tailnet autorice el usuario de desarrollo; estar `Connected` o responder a
+`tailscale ping` no habilita por sí solo una sesión SSH.
+
+`make tailscale-check KIOSK=<alias|all>` muestra primero el estado de red y
+luego intenta una sesión sin modificar nada. Tanto el chequeo como la
+actualización tienen timeout, y `tailscale-update` imprime las etapas
+`[1/3] red`, `[2/3] transferencia` (con progreso en MB) y `[3/3] instalación`;
+si queda esperando, el último mensaje indica exactamente en cuál etapa.
+
+### Deploy paso a paso desde la PC de desarrollo
+
+1. **Ruta de Tailscale (solo si usas la VPN WireGuard `wg0`).** Una VPN full
+   tunnel tiene una regla de ruteo (prioridad 99) que le gana a la de Tailscale
+   (5270): el TCP hacia `100.x` sale por `wg0` y se pierde. Síntomas: `tailscale
+   ping` responde pero `ssh`/`tailscale ssh` dan timeout y tu nodo aparece
+   `offline`. Arreglo (se pierde al reiniciar la PC):
+
+   ```bash
+   sudo ip rule add to 100.64.0.0/10 lookup 52 priority 90
+   ip route get 100.109.149.26   # debe decir "dev tailscale0"
+   ```
+
+2. **Verificación de identidad de Tailscale.** Si la ACL usa `check`, el primer
+   `tailscale ssh` imprime `To authenticate, visit: https://login.tailscale.com/a/...`.
+   Ábrela y aprueba; queda recordado unas horas. Si no hay nadie para aprobar el
+   Makefile corta por timeout: sube `TS_CONNECT_TIMEOUT=120`.
+
+3. **Versión y `.deb`.** `node -p "require('./package.json').version"` y
+   `ls releases/<ver>/*.deb`. Para una versión nueva: bumpea `package.json` y
+   corre `make deploy`.
+
+4. **Instalar, una kiosk a la vez** (pide la contraseña de `sudo` de cada kiosk):
+
+   ```bash
+   make tailscale-check KIOSK=cdakiosk-001
+   make tailscale-update KIOSK=cdakiosk-001
+   make tailscale-update KIOSK=cdapuestas-kiosk-002
+   make tailscale-update KIOSK=cdapuestas-kiosk-002-1
+   ```
+
+   Empieza por una sola, imprime un ticket real y solo entonces sigue con las
+   demás. Límites ajustables: `TS_CONNECT_TIMEOUT` (30 s), `TS_TRANSFER_TIMEOUT` (900 s; el
+   `.deb` pesa ~76 MB y por el relay DERP va a ~0,5 MB/s) y `TS_INSTALL_TIMEOUT` (120 s).
+
+5. **Rollback.** Si falla `dpkg`, la versión anterior sigue funcionando. Para
+   volver: `DEB=releases/<ver-anterior>/cdapuestas-webview-setup-<ver-anterior>.deb make tailscale-update KIOSK=<alias>`.
+
 Verificación después de actualizar (no dar por buena una kiosk sin esto):
 
 1. `dpkg -l cdapuestas-webview` muestra la versión nueva.

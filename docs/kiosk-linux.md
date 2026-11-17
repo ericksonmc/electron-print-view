@@ -77,8 +77,10 @@ La vía oficial es por **USB**, porque la app se distribuye como `.deb`
 
 ### Actualizar por Tailscale (kioscos con acceso remoto)
 
-Si la kiosk está `Connected` en Tailscale se actualiza sin pendrive, con `scp` +
-`dpkg -i` desde la PC de desarrollo. Los pasos, la verificación posterior, el
+Si la kiosk está `Connected` en Tailscale se actualiza sin pendrive, con
+`make tailscale-update KIOSK=<alias>` (o `scp` + `dpkg -i`) desde la PC de
+desarrollo. Si usas una VPN `wg0`, antes hay que corregir la ruta de Tailscale
+(`ssh` da timeout aunque `tailscale ping` responda). Los pasos, la verificación posterior, el
 inventario de máquinas (usuario, IP, impresora, versión) y las reglas de qué se
 debe y qué no se debe hacer están en
 [`estado-y-reglas-2026-11-10.md`](estado-y-reglas-2026-11-10.md). El `.deb` crea

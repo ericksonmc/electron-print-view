@@ -82,6 +82,10 @@ electron-builder.full.yml   config de electron-builder para el build "full"
 | Full (Electron) | `npm run build:full:linux` / `:win` | `.deb`/AppImage o `.exe` NSIS con la ventana + el servicio embebido |
 | Solo socket | `npm run build:socket:linux` / `:win` | daemon empaquetado con `pkg`, instalado como servicio systemd o de Windows (WinSW), sin ventana |
 
+`make deploy` genera ambos `.deb` (WebView para kioscos y plugin de impresión
+para PCs de agencia con navegador); ver
+[docs/plugin-impresion-agencias.md](docs/plugin-impresion-agencias.md) (incluye el `.exe` de Windows).
+
 En dev: `npm run dev` (full, abre Electron) o `npm run dev:socket` (solo el
 daemon, `node src/service/index.js`).
 
@@ -151,6 +155,10 @@ reabre una conexión real como hacía en el código legado con USB directo) y
   cambia con `[qr width=N]` (puntos, 8 ≈ 1 mm) o fija el módulo con
   `[qr size=N]`. Hasta la 1.1.5 era `size: 10` fijo (~57 mm) y los atributos se
   ignoraban.
+- Si `tailscale ssh`/`ssh` a una kiosk dan timeout pero `tailscale ping`
+  responde, la VPN `wg0` está capturando `100.x`:
+  `sudo ip rule add to 100.64.0.0/10 lookup 52 priority 90` (ver
+  `docs/estado-y-reglas-2026-11-10.md`, «Deploy paso a paso»).
 - "No hay una impresora por defecto configurada" viene del fallback al spooler:
   la causa real casi siempre es que falló el USB.
 
