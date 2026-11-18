@@ -161,6 +161,31 @@ equivalentes están en [windows-build.md](windows-build.md), sección 4.
 
 No hay versión de Windows para el WebView de kioscos: los kioscos son Linux.
 
+## Descarga para las agencias
+
+- URL pública: `https://cdapuestas.com/descargas/cda-print-view-setup.exe`
+  (nombre fijo; siempre es la última versión publicada).
+- En el panel de `centro-de-apuestas`, el menú lateral de agencia y taquilla
+  tiene «Descargar plugin de impresión» (`agents-panel.html`).
+- El archivo vive **solo en el servidor** `cdawebserver`, en
+  `/var/www/cdapuestas/dist/descargas/` (nginx sirve `dist/` del repo
+  `centro-de-apuestas`). No está en git (pesa ~50 MB) y el `git pull` del deploy
+  no lo toca porque es un archivo sin versionar. Si algún día se borra `dist/`
+  entero en el servidor, hay que volver a subirlo.
+- Nginx lo entrega con `Cache-Control: no-store`; Cloudflare no lo cachea
+  (cada descarga sale del origen). No se tocó nginx (requiere sudo).
+
+Publicar una versión nueva (desde la máquina con el `.exe` recién compilado):
+
+```bash
+sha256sum cda-print-view-setup.exe
+scp cda-print-view-setup.exe cdawebserver:/var/www/cdapuestas/dist/descargas/
+ssh cdawebserver 'chmod 644 /var/www/cdapuestas/dist/descargas/cda-print-view-setup.exe && sha256sum /var/www/cdapuestas/dist/descargas/cda-print-view-setup.exe'
+```
+
+Los dos hashes deben coincidir. Publicado el 2026-11-17 (sha256
+`7bf9ea56…8485`, 50 422 709 bytes). El `.deb` para Linux no está publicado.
+
 ## Pendiente
 
 - No se probó la instalación en una PC de agencia real (solo el build, el
