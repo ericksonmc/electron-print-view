@@ -149,7 +149,14 @@ equivalentes están en [windows-build.md](windows-build.md), sección 4.
    Get-Service cda-print-view
    Get-Content "$env:ProgramData\cda-print-view\logs\cda-print-view.wrapper.log" -Tail 30
    ```
-4. Si hay problemas de impresión, `installer-socket-debug.nsi` genera una
+4. Prueba completa (servicio, puerto, impresora predeterminada y un ticket de
+   prueba con QR por el WebSocket real; copia `tools\probar-plugin.ps1` a la PC):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\probar-plugin.ps1
+   ```
+   `-SinImprimir` omite el ticket. También sirve `tools/printer-client.html`
+   abierto en el navegador.
+5. Si hay problemas de impresión, `installer-socket-debug.nsi` genera una
    variante con log detallado (se compila igual, cambiando el `.nsi`).
 
 No hay versión de Windows para el WebView de kioscos: los kioscos son Linux.
